@@ -78,7 +78,7 @@ class billmatecardpay {
 
 		(MODULE_PAYMENT_BILLMATECARDPAY_TESTMODE != 'True') ? $this->billmatecardpay_livemode = true : $this->billmatecardpay_livemode = false;
 
-		$this->description = MODULE_PAYMENT_BILLMATECARDPAY_TEXT_DESCRIPTION . "<br />Version: 1.1";
+		$this->description = MODULE_PAYMENT_BILLMATECARDPAY_TEXT_DESCRIPTION . "<br />Version: 1.2";
 		$this->enabled = ((MODULE_PAYMENT_BILLMATECARDPAY_STATUS == 'True') ?
 		true : false);
 
@@ -222,7 +222,7 @@ class billmatecardpay {
 	}
 
 	function pre_confirmation_check() {
-		global $billmatecardpay_testmode, $billmatecardpay_livemode, $order, $GA_OLD, $KRED_SE_PNO, $user_billing;
+		global $billmatecardpay_testmode, $billmatecardpay_livemode, $order, $GA_OLD, $BILL_SE_PNO, $user_billing;
 		//Store values into Session
 		$_SESSION['user_billing'] = $user_billing;
 
@@ -265,10 +265,9 @@ class billmatecardpay {
 		$_['prompt_name_entry']   = MODULE_PAYMENT_BILLMATECARDPAY_NAME_MODE;
 		$_['language']      = $languageCode;
 		$_['capture_now']   = MODULE_PAYMENT_BILLMATECARDPAY_AUTHENTICATION_MODE == 'sale' ? 'YES' :'NO';
-
+		unset($_SESSION['card_api_called']);
 		$mac_str = $_['accept_url'] . $_['amount'] . $_['callback_url'] . $_['cancel_url'] . $_['capture_now'] . $_['currency'] . $_['do_3d_secure'] . $_['language'] . $_['merchant_id'] . $_['order_id'] . $_['pay_method'] . $_['prompt_name_entry'] . $_['return_method'] . $secret;
 		$mac = hash( "sha256", $mac_str );
-		billmate_log_data($_, $eid, 'Cardpay Redirect hidden form');
 
 		$_['mac']					= $mac;
 
@@ -319,7 +318,7 @@ class billmatecardpay {
 							// Add tax rate for shipping address and invoice fee
 							if ($class == 'ot_shipping') {
 								//Set Shipping VAT
-								$shipping_id = @explode('_', $shipping['id']);
+								$shipping_id = @explode('_', $_SESSION['shipping']['id']);
 								$tax_class = @$GLOBALS[$shipping_id[0]]->tax_class;
 								$tax_rate = 0;
 								if($tax_class > 0) {
@@ -511,7 +510,7 @@ class billmatecardpay {
 		$ssl = true;
 		$debug = false;
 
-		$k = new BillMateAPI($eid,$secret,$ssl,$debug);
+		$k = new BillMate($eid,$secret,$ssl,$debug);
 		$result1 = $k->AddOrder('',$bill_address,$ship_address,$goodsList,$transaction);
 	}
 	function before_process() {
@@ -690,10 +689,13 @@ class billmatecardpay {
 		$ssl = true;
 		$debug = false;
 
-		$k = new BillMateAPI($eid,$secret,$ssl,$debug);
-		$result1 = $k->AddInvoice('',$bill_address,$ship_address,$goodsList,$transaction);
+		if( !isset($_SESSION['card_api_called']) || $_SESSION['card_api_called']!= true) {
 		
+			$k = new BillMate($eid,$secret,$ssl,$debug);
+			$result1 = $k->AddInvoice('',$bill_address,$ship_address,$goodsList,$transaction);
+		}
 		if (is_array($result1)) {
+			$_SESSION['card_api_called'] = true;
 
 			// insert address in address book to get correct address in
 			// confirmation mail (or fetch correct address from address book
@@ -781,7 +783,7 @@ class billmatecardpay {
 
 		$ssl = true;
 		$debug = false;
-		$k = new BillMateAPI($eid,$secret,$ssl,$debug, $this->billmatecardpay_testmode);
+		$k = new BillMate($eid,$secret,$ssl,$debug, $this->billmatecardpay_testmode);
 		$result1 = $k->UpdateOrderNo($invno, $insert_id);
 
 		//Delete Session with user details

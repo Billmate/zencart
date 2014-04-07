@@ -65,7 +65,7 @@ class pcbillmate extends base{
             $this->title .= ' '.MODULE_PAYMENT_PCBILLMATE_TESTMODE_TITLE;
         }
 
-        $this->description = MODULE_PAYMENT_PCBILLMATE_TEXT_DESCRIPTION . "<br />Version: 1.1";
+        $this->description = MODULE_PAYMENT_PCBILLMATE_TEXT_DESCRIPTION . "<br />Version: 1.2";
         $this->enabled = ((MODULE_PAYMENT_PCBILLMATE_STATUS == 'True') ? true : false);
 
         if($this->enabled) {
@@ -148,7 +148,7 @@ class pcbillmate extends base{
     }
 
     function selection() {
-        global $pcbillmate_testmode, $order, $customer_id, $currencies, $KRED_ISO3166_SE, $currency, $user_billing, $db;
+        global $pcbillmate_testmode, $order, $customer_id, $currencies, $BILL_ISO3166_SE, $currency, $user_billing, $db;
 
         //Set the right Host and Port
         $livemode = $this->pcbillmate_testmode == false;
@@ -198,7 +198,7 @@ class pcbillmate extends base{
         }
 
         //Get and calculate monthly costs for all pclasses
-        $pclasses = BillmateUtils::calc_monthly_cost($total, MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, $KRED_ISO3166_SE, 0);
+        $pclasses = BillmateUtils::calc_monthly_cost($total, MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, $BILL_ISO3166_SE, 0);
         
         $lowest = BillmateUtils::get_cheapest_pclass($pclasses);
 
@@ -257,7 +257,7 @@ class pcbillmate extends base{
     }
 
     function pre_confirmation_check() {
-        global $pcbillmate_testmode, $order, $GA_OLD, $KRED_SE_PNO, $user_billing, $db;
+        global $pcbillmate_testmode, $order, $GA_OLD, $BILL_SE_PNO, $user_billing, $db;
 
         //Set the right Host and Port
         $livemode = $this->pcbillmate_testmode == false;
@@ -296,14 +296,14 @@ class pcbillmate extends base{
         $eid = MODULE_PAYMENT_PCBILLMATE_EID;
         $secret = MODULE_PAYMENT_PCBILLMATE_SECRET;
 
-        $pnoencoding = $KRED_SE_PNO;
+        $pnoencoding = $BILL_SE_PNO;
 
         $type = $GA_OLD;
 
 		$ssl = true;
 		$debug = false;
 
-		$k = new BillMateAPI((int)$eid,(float)$secret,$ssl,$debug);
+		$k = new BillMate((int)$eid,(float)$secret,$ssl,$debug);
 		$result = $k->getAddress( $pno );
        // $status = get_addresses($eid, BillmateUtils::convertData($pno), $secret, $pnoencoding, $type, $result);
         if (!is_array($result)) {
@@ -596,7 +596,7 @@ class pcbillmate extends base{
                             // Add tax rate for shipping address and invoice fee
                             if ($class == 'ot_shipping') {
                                 //Set Shipping VAT
-                                $shipping_id = @explode('_', $shipping['id']);
+                                $shipping_id = @explode('_', $_SESSION['shipping']['id']);
                                 $tax_class = @$GLOBALS[$shipping_id[0]]->tax_class;
                                 $tax_rate = 0;
                                 if($tax_class > 0) {
@@ -807,7 +807,7 @@ class pcbillmate extends base{
 		$ssl = true;
 		$debug = false;
 
-		$k = new BillMateAPI($eid,$secret,$ssl,$debug);
+		$k = new BillMate($eid,$secret,$ssl,$debug);
 		$result1 = $k->AddInvoice($pno,$ship_address,$bill_address,$goodsList,$transaction);
         if (is_array($result1)) {
 
@@ -896,7 +896,7 @@ class pcbillmate extends base{
 
 		$ssl = true;
 		$debug = false;
-		$k = new BillMateAPI($eid,$secret,$ssl,$debug, $this->pcbillmate_testmode);
+		$k = new BillMate($eid,$secret,$ssl,$debug, $this->pcbillmate_testmode);
 		$result1 = $k->UpdateOrderNo($invno, $insert_id);
         return false;
     }
@@ -979,7 +979,7 @@ class pcbillmate extends base{
     }
 
     function keys() {
-        global $pcbillmate_testmode, $KRED_ISO3166_SE;
+        global $pcbillmate_testmode, $BILL_ISO3166_SE;
 
         //Set the right Host and Port
         $livemode = $this->pcbillmate_testmode == false;
@@ -987,20 +987,20 @@ class pcbillmate extends base{
         $filename = explode('?', basename($_SERVER['REQUEST_URI'], 0));//[0];
 
         if ($filename[0] == "modules.php") {
-            if ($_GET['get_pclasses'] == TRUE) {
+            //if ($_GET['get_pclasses'] == TRUE) {
                 $eid = MODULE_PAYMENT_PCBILLMATE_EID;
                 $secret = MODULE_PAYMENT_PCBILLMATE_SECRET;
 
                 $result = false;
-                fetch_pclasses($eid, $KRED_SEK, $secret, $KRED_ISO3166_SE, $KRED_ISO639_SE, $result);
+                fetch_pclasses($eid, $BILL_SEK, $secret, $BILL_ISO3166_SE, $BILL_ISO639_SE, $result);
 
                 BillmateUtils::update_pclasses(MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, $result);
-            }
-            if (( isset($_GET['view_pclasses']) && $_GET['view_pclasses'] == TRUE) || ( isset($_GET['get_pclasses']) && $_GET['get_pclasses'] == TRUE) ) {
+           // }
+           // if (( isset($_GET['view_pclasses']) && $_GET['view_pclasses'] == TRUE) || ( isset($_GET['get_pclasses']) && $_GET['get_pclasses'] == TRUE) ) {
                 //echo "<pre>";
-                BillmateUtils::display_pclasses(MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, $KRED_ISO3166_SE);
+                BillmateUtils::display_pclasses(MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, $BILL_ISO3166_SE);
                 //echo "</pre>";
-            }
+           // }
         }
 
         return array('MODULE_PAYMENT_PCBILLMATE_STATUS',

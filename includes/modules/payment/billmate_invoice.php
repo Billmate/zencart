@@ -41,17 +41,14 @@ if(!class_exists('Encoding',false)){
 
 
 
-error_reporting(E_ERROR);
-ini_set('display_errors', true);
-
-class billmate {
+class billmate_invoice {
     var $code, $title, $description, $enabled, $billmate_livemode, $billmate_testmode, $jQuery, $db;
 
     // class constructor
-    function billmate() {
+    function billmate_invoice() {
         global $order, $currency, $currencies, $customer_id, $customer_country_id, $billmate_livemode, $billmate_testmode;
         $this->jQuery = true;
-        $this->code = 'billmate';
+        $this->code = 'billmate_invoice';
 
         if(strpos($_SERVER['SCRIPT_FILENAME'],'admin')) {
             $this->title = MODULE_PAYMENT_BILLMATE_TEXT_TITLE;
@@ -74,7 +71,7 @@ class billmate {
 			$this->billmate_livemode = false;
         }
 
-        $this->description = MODULE_PAYMENT_BILLMATE_TEXT_DESCRIPTION . "<br />Version: 1.1";
+        $this->description = MODULE_PAYMENT_BILLMATE_TEXT_DESCRIPTION . "<br />Version: 1.2";
         $this->enabled = ((MODULE_PAYMENT_BILLMATE_STATUS == 'True') ?
                 true : false);
 
@@ -171,6 +168,7 @@ class billmate {
             if ($check_flag == false)
                 $this->enabled = false;
         }
+		$this->enabled = true;
     }
 
     function javascript_validation() {
@@ -235,7 +233,8 @@ class billmate {
         //Fade in/fade out code for the module
         $js = ($this->jQuery) ? BillmateUtils::get_display_jQuery($this->code) : "";
         $popup = '';
-        if(!empty($_GET['error']) && $_GET['error'] == 'invalidaddress' && !empty( $_SESSION['WrongAddress'] ) ){
+
+        if(!empty($_GET['error']) && $_GET['error'] == 'true' && !empty( $_SESSION['WrongAddress'] ) ){
             $popup = $_SESSION['WrongAddress'];
         }
         $fields=array(
@@ -262,7 +261,7 @@ class billmate {
     }
 
     function pre_confirmation_check() {
-        global $billmate_testmode, $billmate_livemode, $order, $GA_OLD, $KRED_SE_PNO, $user_billing, $db;
+        global $billmate_testmode, $billmate_livemode, $order, $GA_OLD, $BILL_SE_PNO, $user_billing, $db;
 
         //Livemode to set the right Host and Port
         $livemode = $this->billmate_livemode;
@@ -292,25 +291,25 @@ class billmate {
 		}
         if (!empty($errors)) {
 			$_SESSION['error'] = implode(', ', $errors);
-            zen_redirect( zen_href_link(FILENAME_CHECKOUT_PAYMENT).'&payment_error=billmate&error=true' );
+            zen_redirect( zen_href_link(FILENAME_CHECKOUT_PAYMENT).'&payment_error=billmate_invoice&error=true' );
         }
 
         $pno = $this->billmate_pnum = $_POST['billmate_pnum'];
         $eid = MODULE_PAYMENT_BILLMATE_EID;
         $secret = MODULE_PAYMENT_BILLMATE_SECRET;
 
-        $pnoencoding = $KRED_SE_PNO;
+        $pnoencoding = $BILL_SE_PNO;
         $type = $GA_OLD;
 
 		$ssl = true;
 		$debug = false;
 
-		$k = new BillMateAPI((int)$eid,(float)$secret,$ssl,$debug);
+		$k = new BillMate((int)$eid,(float)$secret,$ssl,$debug);
 		$result = $k->getAddress( $pno );
 
         if (!is_array($result)) {
-			$_SESSION['error'] = strip_tags($result)." ($status)";
-			zen_redirect( zen_href_link(FILENAME_CHECKOUT_PAYMENT).'&payment_error=billmate&error=true');
+			$_SESSION['error'] = strip_tags(utf8_encode($result))." ($status)";
+			zen_redirect( zen_href_link(FILENAME_CHECKOUT_PAYMENT).'&payment_error=billmate_invoice&error=true');
         }
        
         $this->addrs = $result;
@@ -404,7 +403,7 @@ class billmate {
                 global $messageStack;
                 $_SESSION['WrongAddress'] = $WrongAddress;
 				$_SESSION['error']= "invalidaddress";
-                zen_redirect( zen_href_link(FILENAME_CHECKOUT_PAYMENT).'&payment_error=billmate&error=true' );
+                zen_redirect( zen_href_link(FILENAME_CHECKOUT_PAYMENT).'&payment_error=billmate_invoice&error=true' );
 	        }else{
 	            if(!match_usernamevp( $fullname , $apiName)){
                     if($result[0][0] == "") {
@@ -567,8 +566,8 @@ class billmate {
                 }
 
                 $size = sizeof($GLOBALS[$class]->output);
-
-                if ($ignore == false && $size > 0) {
+	
+	            if ($ignore == false && $size > 0) {
                     $billmate_ot['code_size_'.$j] = $size;
 
                     for ($i=0; $i<$size; $i++) {
@@ -585,8 +584,9 @@ class billmate {
                             // Add tax rate for shipping address and invoice fee
                             if ($class == 'ot_shipping') {
                                 //Set Shipping VAT
-                                $shipping_id = @explode('_', $shipping['id']);
+                                $shipping_id = @explode('_', $_SESSION['shipping']['id']);
                                 $tax_class = @$GLOBALS[$shipping_id[0]]->tax_class;
+								
                                 $tax_rate = 0;
                                 if($tax_class > 0) {
                                     $tax_rate = zen_get_tax_rate($tax_class, $order->billing['country']['id'], ($order->billing['zone_id'] > 0) ? $order->billing['zone_id'] : null);
@@ -604,6 +604,7 @@ class billmate {
             }
             $billmate_ot['code_entries'] = $j;
         }
+		
 		$_SESSION['billmate_ot'] = $billmate_ot;
 		
         $process_button_string .= zen_draw_hidden_field(zen_session_name(),
@@ -705,6 +706,12 @@ class billmate {
                 $flags = 0; //INC VAT
                 if($code == 'ot_shipping') {
                     $flags += 8; //IS_SHIPMENT
+					if (DISPLAY_PRICE_WITH_TAX == 'true'){
+						echo $order->info['shipping_tax'];
+					} else {
+						$exclueded_value = $value;
+						$rate = ($exclueded_value + $order->info['shipping_tax'])/$exclueded_value;
+					}
                 }
                 else if($code == 'ot_'.$this->code.'_fee') {
                     $flags += 16; //IS_HANDLING
@@ -727,7 +734,6 @@ class billmate {
 
             }
         }
-
 
         $secret = MODULE_PAYMENT_BILLMATE_SECRET;
         $estoreOrderNo = "";
@@ -809,9 +815,8 @@ class billmate {
 		$ssl = true;
 		$debug = false;
 
-		$k = new BillMateAPI($eid,$secret,$ssl,$debug, $this->billmate_testmode);
+		$k = new BillMate($eid,$secret,$ssl,$debug, $this->billmate_testmode);
 		$result1 = $k->AddInvoice($pno,$ship_address,$bill_address,$goodsList,$transaction);
-
         if (is_array($result1)) {
 
             // insert address in address book to get correct address in
@@ -858,7 +863,7 @@ class billmate {
             return false;
         } else {
 			$_SESSION['error'] = utf8_encode($result1);
-			zen_redirect( zen_href_link(FILENAME_CHECKOUT_PAYMENT).'&payment_error=billmate&error=true' );				
+			zen_redirect( zen_href_link(FILENAME_CHECKOUT_PAYMENT).'&payment_error=billmate_invoice&error=true' );				
         }
     }
 
@@ -901,7 +906,7 @@ class billmate {
 
 		$ssl = true;
 		$debug = false;
-		$k = new BillMateAPI($eid,$secret,$ssl,$debug, $this->billmate_testmode);
+		$k = new BillMate($eid,$secret,$ssl,$debug, $this->billmate_testmode);
 		$result1 = $k->UpdateOrderNo($invno, $insert_id);
         //Delete Session with user details
 		unset($_SESSION['user_billing']);

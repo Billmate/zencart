@@ -121,7 +121,7 @@ class BillmateUtils {
      * @return array
      */
     public static function calc_monthly_cost($total, $table, $country, $flags) {
-        global $KRED_ISO3166_NO, $currencies;
+        global $BILL_ISO3166_NO, $currencies;
 
         $lowest_pp = false;
         $listarray = array();
@@ -129,6 +129,7 @@ class BillmateUtils {
 
         $pclasses = self::get_pclasses($table, $country);
         foreach($pclasses as &$pclass) {
+			$pclass['description'] = utf8_decode($pclass['description']);
             if($total >= ($pclass['minamount']/100)) {
                 if($pclass['type'] < 2) {
                     $pclass['minpay'] = ceil(BillmateCalc::calc_monthly_cost($total, $pclass['months'], $pclass['fee']/100, $pclass['startfee']/100, $pclass['interest']/100, $pclass['type'], $flags, $country));
@@ -137,7 +138,7 @@ class BillmateUtils {
                     $pclass['text'] = $pclass['description']." - ".$currencies->format($pclass['minpay'], false);
 
                     //Norway only
-                    if($country === $KRED_ISO3166_NO) {
+                    if($country === $BILL_ISO3166_NO) {
                         $pclass['tcpc'] = BillmateCalc::total_credit_purchase_cost($total, $pclass['interest']/100, $pclass['fee']/100, $pclass['minpay'], $pclass['months'], $pclass['startfee']/100, $pclass['type']);
                         $pclass['text'] .= " ".BILLMATE_LANG_NO_PAYMENTTEXT2_EACH." (* ".$currencies->format(ceil($pclass['tcpc']), false).")";
                     }
@@ -184,6 +185,7 @@ class BillmateUtils {
     public static function display_pclasses($table, $country) {
 
         $pclasses = self::get_pclasses($table, $country);
+		if( sizeof( $pclasses) <=0  ) return false;
 		?>
 		<tr><td valign="top" colspan="5">
 		<table border="0" cellspacing="0" cellpadding="2" width="100%">
@@ -196,7 +198,8 @@ class BillmateUtils {
 				<th class="dataTableHeadingContent">Handling Fee</th>
 				<th class="dataTableHeadingContent">Start Fee</th>
 				<th class="dataTableHeadingContent">Min Amount</th>
-				<th class="dataTableHeadingContent">Country Number</th>
+				<th class="dataTableHeadingContent">Country</th>
+				<th class="dataTableHeadingContent">Expiry</th>
 			</tr>
 		<?php
         foreach($pclasses as $pclass) {
@@ -214,7 +217,8 @@ class BillmateUtils {
 			echo '<td class="dataTableContent" align="center">', $pclass['fee'],'</td>';
 			echo '<td class="dataTableContent" align="center">', $pclass['startfee'],'</td>';
 			echo '<td class="dataTableContent" align="center">', $pclass['minamount'],'</td>';
-			echo '<td class="dataTableContent" align="center">', $pclass['country'],'</td></tr>';
+			echo '<td class="dataTableContent" align="center">', ($pclass['country'] == 209 ? 'SWEDEN' : $pclass['country']),'</td>';
+			echo '<td class="dataTableContent" align="center">', $pclass['expiry_date'],'</td></tr>';
 
             /*printf(" %-6s,");
             printf(" %-13s,");
@@ -263,6 +267,7 @@ class BillmateUtils {
           `startfee` int(11) NOT NULL,
           `minamount` int(11) NOT NULL,
           `country` int(11) NOT NULL,
+		  `expiry_date` varchar(20) NOT NULL,
           KEY `id` (`id`)
         ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci");
     }
@@ -298,14 +303,15 @@ class BillmateUtils {
                 $pclass_interest = $pclass[5];
                 $pclass_minamount = $pclass[6];
                 $pclass_country = $pclass[7];
+				$pclass_expiry = $pclass[9];
 
                 //Delete existing pclass
                 $db->Execute("DELETE FROM `".$table."` WHERE `id` = '".$pclass_id."'");
 				
                 //Insert new pclass (replace into only exists for MySQL...)
-                $db->Execute("INSERT INTO `".$table."` (`id`, `type`, `description`, `months`, `interest`, `fee`, `startfee`, `minamount`, `country`) " .
+                $db->Execute("INSERT INTO `".$table."` (`id`, `type`, `description`, `months`, `interest`, `fee`, `startfee`, `minamount`, `country`,`expiry_date`) " .
                         "VALUES ('".$pclass_id."', '".$pclass_type."', '".$pclass_desc."', '".$pclass_months."', '".$pclass_interest."', ".
-                        "'".$pclass_fee."', '".$pclass_startfee."', '".$pclass_minamount."', '".$pclass_country."')");
+                        "'".$pclass_fee."', '".$pclass_startfee."', '".$pclass_minamount."', '".$pclass_country."','".$pclass_expiry."')");
             }
         }
     }

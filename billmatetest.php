@@ -98,6 +98,6 @@ $transaction = array(
 	"extraInfo"=>array(array("cust_no"=>(string)time(),"creditcard_data"=>$_POST['']))
 );
 
-$k = new BillMateAPI($eid,$secret,$ssl,$debug);
+$k = new BillMate($eid,$secret,$ssl,$debug);
 $result1 = $k->AddInvoice('',$ship_address,$bill_address,$goodsList,$transaction);
 var_dump($result1);
