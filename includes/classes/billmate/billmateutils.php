@@ -40,54 +40,7 @@ class BillmateUtils {
      *
      */
     public static function get_display_jQuery($code) {
-        return "<script type='text/javascript'>
-                if(typeof jQuery != 'undefined')
-                jQuery(document).ready(function() {
-                    var input = jQuery('input[value=\"".$code."\"][name=\"payment\"]');
-                    var elem = input.parent().parent().next().children().children().children().children().next();
-                    elem.attr('khidden', 'true');
-                    elem.hide();
-
-                    var showFunc = function() {
-                        var input = jQuery('input[value=\"".$code."\"][name=\"payment\"]');
-                        jQuery('input[name=\"payment\"]:checked').attr('checked', false);
-                        input.attr('checked', 'checked');
-                        var element = input.parent().parent().next().children().children().children().children().next();
-                        if(element.attr('khidden') != 'false') {
-                            element.fadeIn();
-                            element.attr('khidden', 'false');
-                            var checkelem = jQuery('input[name=\"".$code."_invoice_type\"]:checked');
-                            var checkid = checkelem.attr('id');
-                            if(!checkelem.attr('khidden') && input.attr('value').substr(0, 6) == 'billmate') {
-                                if(checkid == 'company') {
-                                    toggle('company');
-                                }
-                                else {
-                                    toggle('private');
-                                }
-                            }
-                        }
-                    };
-
-                    input.parent().parent().parent().click(showFunc);
-                    input.change(showFunc);
-
-                    var inputs = jQuery('input[name=\"payment\"]').not(input);
-
-                    var hideFunc = function() {
-                        var input = jQuery('input[value=\"".$code."\"][name=\"payment\"]');
-                        input.attr('checked', false);
-                        var element = input.parent().parent().next().children().children().children().children().next();
-                        if(element.attr('khidden') != 'true') {
-                            element.hide();
-                            element.attr('khidden', 'true');
-                        }
-                    }
-
-                    inputs.parent().parent().parent().click(hideFunc);
-                    inputs.change(hideFunc);
-                });
-            </script>";
+        return "";
     }
 
     /**
@@ -130,7 +83,7 @@ class BillmateUtils {
         $pclasses = self::get_pclasses($table, $country);
         foreach($pclasses as &$pclass) {
 			$pclass['description'] = utf8_decode($pclass['description']);
-            if($total >= ($pclass['minamount']/100)) {
+            if($total >= ($pclass['minamount']/100) && ($total <= ($pclass['maxamount']/100) || $pclass['maxamount'] == 0 ) ) {
                 if($pclass['type'] < 2) {
                     $pclass['minpay'] = ceil(BillmateCalc::calc_monthly_cost($total, $pclass['months'], $pclass['fee']/100, $pclass['startfee']/100, $pclass['interest']/100, $pclass['type'], $flags, $country));
 
@@ -198,6 +151,7 @@ class BillmateUtils {
 				<th class="dataTableHeadingContent">Handling Fee</th>
 				<th class="dataTableHeadingContent">Start Fee</th>
 				<th class="dataTableHeadingContent">Min Amount</th>
+				<th class="dataTableHeadingContent">Max Amount</th>
 				<th class="dataTableHeadingContent">Country</th>
 				<th class="dataTableHeadingContent">Expiry</th>
 			</tr>
@@ -217,6 +171,7 @@ class BillmateUtils {
 			echo '<td class="dataTableContent" align="center">', $pclass['fee'],'</td>';
 			echo '<td class="dataTableContent" align="center">', $pclass['startfee'],'</td>';
 			echo '<td class="dataTableContent" align="center">', $pclass['minamount'],'</td>';
+			echo '<td class="dataTableContent" align="center">', $pclass['maxamount'],'</td>';			
 			echo '<td class="dataTableContent" align="center">', ($pclass['country'] == 209 ? 'SWEDEN' : $pclass['country']),'</td>';
 			echo '<td class="dataTableContent" align="center">', $pclass['expiry_date'],'</td></tr>';
 
@@ -266,6 +221,7 @@ class BillmateUtils {
           `fee` int(11) NOT NULL,
           `startfee` int(11) NOT NULL,
           `minamount` int(11) NOT NULL,
+          `maxamount` int(11) NOT NULL,
           `country` int(11) NOT NULL,
 		  `expiry_date` varchar(20) NOT NULL,
           KEY `id` (`id`)
@@ -304,14 +260,14 @@ class BillmateUtils {
                 $pclass_minamount = $pclass[6];
                 $pclass_country = $pclass[7];
 				$pclass_expiry = $pclass[9];
+                $pclass_maxamount = $pclass[10];
 
                 //Delete existing pclass
                 $db->Execute("DELETE FROM `".$table."` WHERE `id` = '".$pclass_id."'");
-				
                 //Insert new pclass (replace into only exists for MySQL...)
-                $db->Execute("INSERT INTO `".$table."` (`id`, `type`, `description`, `months`, `interest`, `fee`, `startfee`, `minamount`, `country`,`expiry_date`) " .
+                $db->Execute("INSERT INTO `".$table."` (`id`, `type`, `description`, `months`, `interest`, `fee`, `startfee`, `minamount`, `maxamount`, `country`,`expiry_date`) " .
                         "VALUES ('".$pclass_id."', '".$pclass_type."', '".$pclass_desc."', '".$pclass_months."', '".$pclass_interest."', ".
-                        "'".$pclass_fee."', '".$pclass_startfee."', '".$pclass_minamount."', '".$pclass_country."','".$pclass_expiry."')");
+                        "'".$pclass_fee."', '".$pclass_startfee."', '".$pclass_minamount."', '".$pclass_maxamount."', '".$pclass_country."','".$pclass_expiry."')");
             }
         }
     }

@@ -31,6 +31,7 @@ error_reporting(E_ERROR);
 ini_set('display_errors', true);
 
 $includebackup = $i;
+@session_start();
 
 @include_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmate_lang.php');
 if(!class_exists('Encoding',false)){
@@ -231,13 +232,10 @@ class billmate_invoice {
         empty($user_billing['billmate_email']) ? $billmate_email = '' : $billmate_email = $user_billing['billmate_email'];
 
         //Fade in/fade out code for the module
-        $js = ($this->jQuery) ? BillmateUtils::get_display_jQuery($this->code) : "";
-        $popup = '';
 
-        if(!empty($_GET['error']) && $_GET['error'] == 'true' && !empty( $_SESSION['WrongAddress'] ) ){
-            $popup = $_SESSION['WrongAddress'];
-        }
-        $fields=array(
+		$js = isset($_SESSION['WrongAddress'])?$_SESSION['WrongAddress']:'';
+        
+		$fields=array(
                 array('title' => BILLMATE_LANG_SE_IMGINVOICE,
                         'field' => $js),
                 array('title' => MODULE_PAYMENT_BILLMATE_CONDITIONS,

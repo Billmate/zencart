@@ -30,7 +30,7 @@
 //error_reporting(E_ALL);
 //ini_set('display_errors', true);
 
-
+@session_start();
 $includeLoopVariable = $i;
 @include_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmate_lang.php');
 
@@ -224,7 +224,7 @@ class pcbillmate extends base{
         $error = isset($_SESSION['WrongAddress'])?$_SESSION['WrongAddress']:'';
 		//unset($_SESSION['WrongAddress']);
         //Fade in/fade out code for the module
-        $js = ($this->jQuery) ? BillmateUtils::get_display_jQuery($this->code) : "";
+        $js = "";
 
         $fields=array(
                 array('title' => BILLMATE_LANG_SE_IMGCONSUMERCREDIT,

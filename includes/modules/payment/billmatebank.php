@@ -236,7 +236,7 @@ class billmatebank {
         global $order, $order_total_modules, $billmatebank_ot, $shipping, $db, $languages_id;
 				
         $counter = 1;
-        $process_button_string= '<script type="text/javascript">document.getElementsByName(\'securityToken\').item(0).remove();</script>';
+        $process_button_string= '<script type="text/javascript">jQuery(".hiddenFields").remove();document.getElementsByName(\'securityToken\').item(0).remove();</script>';
 
 				$sql = "select code from " . TABLE_LANGUAGES . " where directory = '{$_SESSION['language']}'";
         $check_language = $db->Execute($sql);
