@@ -221,7 +221,7 @@ class BillmateUtils {
           `fee` int(11) NOT NULL,
           `startfee` int(11) NOT NULL,
           `minamount` int(11) NOT NULL,
-          `maxamount` int(11) NOT NULL,
+          `maxamount` bigint(20) NOT NULL,
           `country` int(11) NOT NULL,
 		  `expiry_date` varchar(20) NOT NULL,
           KEY `id` (`id`)
@@ -247,6 +247,7 @@ class BillmateUtils {
 		
         if(strlen(trim($table)) > 0) {
             //Create table, will not do anything if it exists.
+            BillmateUtils::remove_db($table);
             BillmateUtils::create_db($table);
 
             foreach((array)$pclasses as $pclass) {
