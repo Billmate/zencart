@@ -7,7 +7,7 @@ $BILL_SEK = 0;
 $BILL_NOK = 1;
 $BILL_EUR = 2;
 $BILL_DKK = 3;
-define('PLUGIN_VERSION', '1.2');
+define('PLUGIN_VERSION', '1.3');
 define('BILLMATE_VERSION',  "PHP:ZenCart:".PLUGIN_VERSION );
 
 require_once(dirname( __FILE__ )."/lib/xmlrpc.inc");

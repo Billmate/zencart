@@ -72,7 +72,7 @@ class billmate_invoice {
 			$this->billmate_livemode = false;
         }
 
-        $this->description = MODULE_PAYMENT_BILLMATE_TEXT_DESCRIPTION . "<br />Version: 1.2";
+        $this->description = MODULE_PAYMENT_BILLMATE_TEXT_DESCRIPTION . "<br />Version: 1.3";
         $this->enabled = ((MODULE_PAYMENT_BILLMATE_STATUS == 'True') ?
                 true : false);
 

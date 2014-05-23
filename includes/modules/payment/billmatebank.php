@@ -77,7 +77,7 @@ class billmatebank {
 
         (MODULE_PAYMENT_BILLMATEBANK_TESTMODE != 'True') ? $this->billmatebank_livemode = true : $this->billmatebank_livemode = false;
 
-        $this->description = MODULE_PAYMENT_BILLMATEBANK_TEXT_DESCRIPTION . "<br />Version: 1.2";
+        $this->description = MODULE_PAYMENT_BILLMATEBANK_TEXT_DESCRIPTION . "<br />Version: 1.3";
         $this->enabled = ((MODULE_PAYMENT_BILLMATEBANK_STATUS == 'True') ?
                 true : false);
 
