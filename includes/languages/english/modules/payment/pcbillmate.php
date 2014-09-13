@@ -85,7 +85,7 @@ define('MODULE_PAYMENT_PCBILLMATE_CORRECT_ADDRESS_OPTION', 'Click Yes to continu
 define('MODULE_PAYMENT_PCBILLMATE_YES', 'Yes');
 define('MODULE_PAYMENT_PCBILLMATE_NO', 'No');
 define('MODULE_PAYMENT_PCBILLMATE_CHOOSEALTERNATIVES', 'Choose alternative address below');
-define('MODULE_PAYMENT_PCBILLMATE_ERRORDIVIDE', 'BillMate Account - error');
+define('MODULE_PAYMENT_PCBILLMATE_ERRORDIVIDE', 'Billmate Account - error');
 
 define('MODULE_PAYMENT_PCBILLMATE_PERSON_NUMBER','Personal Number');
 define('MODULE_PAYMENT_PCBILLMATE_EMAIL','My email %s is accurate and can be used for billing');

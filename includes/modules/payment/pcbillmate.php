@@ -65,7 +65,7 @@ class pcbillmate extends base{
             $this->title .= ' '.MODULE_PAYMENT_PCBILLMATE_TESTMODE_TITLE;
         }
 
-        $this->description = MODULE_PAYMENT_PCBILLMATE_TEXT_DESCRIPTION . "<br />Version: 1.3";
+        $this->description = MODULE_PAYMENT_PCBILLMATE_TEXT_DESCRIPTION . "<br />Version: 1.4";
         $this->enabled = ((MODULE_PAYMENT_PCBILLMATE_STATUS == 'True') ? true : false);
 
         if($this->enabled) {
@@ -190,7 +190,7 @@ class pcbillmate extends base{
 
         $er = $currencies->get_value($currency);
         $total = $order->info['total']*$er;
-        $default = "";
+        $default = ( isset($_SESSION['pcbillmate_pclass']) ) ? $_SESSION['pcbillmate_pclass'] : '';
 
         //Show price excl. tax. if display with tax isn't true.
         if(DISPLAY_PRICE_WITH_TAX != 'true') {
@@ -292,7 +292,7 @@ class pcbillmate extends base{
         }
 
         $pno = $this->pcbillmate_pnum = $_POST['pcbillmate_pnum'];
-        $this->pcbillmate_pclass = $_POST['pcbillmate_pclass'];
+        $_SESSION['pcbillmate_pclass'] = $this->pcbillmate_pclass = $_POST['pcbillmate_pclass'];
         $eid = MODULE_PAYMENT_PCBILLMATE_EID;
         $secret = MODULE_PAYMENT_PCBILLMATE_SECRET;
 

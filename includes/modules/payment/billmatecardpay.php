@@ -78,7 +78,7 @@ class billmatecardpay {
 
 		(MODULE_PAYMENT_BILLMATECARDPAY_TESTMODE != 'True') ? $this->billmatecardpay_livemode = true : $this->billmatecardpay_livemode = false;
 
-		$this->description = MODULE_PAYMENT_BILLMATECARDPAY_TEXT_DESCRIPTION . "<br />Version: 1.3";
+		$this->description = MODULE_PAYMENT_BILLMATECARDPAY_TEXT_DESCRIPTION . "<br />Version: 1.4";
 		$this->enabled = ((MODULE_PAYMENT_BILLMATECARDPAY_STATUS == 'True') ?
 		true : false);
 
@@ -289,26 +289,38 @@ class billmatecardpay {
 		
 		if ($insert_order == true) {
           $order_totals = array();
+		  $myOrder = new order;
+		  $myOrder = clone $order;
 		  
           if (is_array($order_total_modules->modules)) {
             reset($order_total_modules->modules);
 			
             while (list(, $value) = each($order_total_modules->modules)) {
               $class = substr($value, 0, strrpos($value, '.'));
-			  $GLOBALS[$class]->process();
-
-			  for ($i=0, $n=sizeof($GLOBALS[$class]->output); $i<$n; $i++) {
-				
-
-				if (zen_not_null($GLOBALS[$class]->output[$i]['title']) && zen_not_null($GLOBALS[$class]->output[$i]['text'])) {
+			  if( $class == 'ot_shipping' ) {
+				    $shipping_title = $order->info['shipping_method'] . ':';
+				    $shipping_text = $currencies->format($order->info['shipping_cost'], true, $order->info['currency'], $order->info['currency_value']);
+				    $shipping_value = $order->info['shipping_cost'];
 					$order_totals[] = array('code' => $GLOBALS[$class]->code,
-											'title' => $GLOBALS[$class]->output[$i]['title'],
-											'text' => $GLOBALS[$class]->output[$i]['text'],
-											'value' => $GLOBALS[$class]->output[$i]['value'],
+											'title' => $shipping_title,
+											'text' => $shipping_text,
+											'value' => $shipping_value,
 											'sort_order' => $GLOBALS[$class]->sort_order);
-				}
+			  } else {
+				  $GLOBALS[$class]->process();
+				  for ($i=0, $n=sizeof($GLOBALS[$class]->output); $i<$n; $i++) {
+					
+	
+					if (zen_not_null($GLOBALS[$class]->output[$i]['title']) && zen_not_null($GLOBALS[$class]->output[$i]['text'])) {
+						$order_totals[] = array('code' => $GLOBALS[$class]->code,
+												'title' => $GLOBALS[$class]->output[$i]['title'],
+												'text' => $GLOBALS[$class]->output[$i]['text'],
+												'value' => $GLOBALS[$class]->output[$i]['value'],
+												'sort_order' => $GLOBALS[$class]->sort_order);
+					}
+				  }
+				  $GLOBALS[$class]->$class();
 			  }
-			  $GLOBALS[$class]->$class();
             }
           }
 
@@ -477,7 +489,8 @@ class billmatecardpay {
 
           $cart_billmate_card_ID = $cartID . '-' . $insert_id;
           $_SESSION['cart_billmate_card_ID'] = $cart_billmate_card_ID;
-        }
+		  $order = clone $myOrder;
+		}
 
 		return array('title' => MODULE_PAYMENT_BILLMATECARDPAY_TEXT_CONFIRM_DESCRIPTION);
 	}
@@ -504,6 +517,7 @@ class billmatecardpay {
 		$_['currency']      = $order->info['currency'];
 		$_['order_id']      = substr($cart_billmate_card_ID, strpos($cart_billmate_card_ID, '-')+1);
 		$_['callback_url']  = 'http://api.billmate.se/callback.php';
+		//$_['callback_url']  = 'http://'.$_SERVER['SERVER_NAME'].'/'.DIR_WS_CATALOG.'extras/billmate/cardpay_ipn.php';
 		$_['amount']        = round($order->info['total'], 2)*100;
 		$_['accept_url']    = zen_href_link(FILENAME_CHECKOUT_PROCESS);
 		$_['cancel_url']    = zen_href_link(FILENAME_CHECKOUT_PAYMENT);
@@ -1025,7 +1039,7 @@ class billmatecardpay {
 			$_SESSION['payment'], $_SESSION['comments'], $_SESSION['cart_billmate_card_ID']);
 
 			zen_redirect(zen_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL'));
-
+			exit;
 			return false;
 		} else {
 			$_SESSION['error'] = utf8_encode($result1);
@@ -1034,7 +1048,8 @@ class billmatecardpay {
 	}
 
 	function after_process() {
-		global $insert_id, $order, $db;
+		global $order, $db;
+		$insert_id = $_POST['order_id'];
 
 		$find_st_optional_field_query =
 		$db->Execute("show columns from " . TABLE_ORDERS);
@@ -1066,6 +1081,8 @@ class billmatecardpay {
 		$order->billmateref));
 
 		zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+		$db->Execute("update " . TABLE_ORDERS . " set orders_status = '".$order_status."', last_modified = now() where orders_id = '" . (int)$insert_id . "'");
+		
 		$secret = (float)MODULE_PAYMENT_BILLMATECARDPAY_SECRET;
 		$eid = (int)MODULE_PAYMENT_BILLMATECARDPAY_EID;
 		$invno = $order->billmateref;
