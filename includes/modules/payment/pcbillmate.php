@@ -55,8 +55,9 @@ class pcbillmate extends base{
             $this->title = MODULE_PAYMENT_PCBILLMATE_TEXT_TITLE;
         }
         else {
-            $tmp = explode('Billmate', MODULE_PAYMENT_PCBILLMATE_TEXT_TITLE);
-            $this->title = $tmp[0] . 'Billmate';
+            //$tmp = explode('Billmate', MODULE_PAYMENT_PCBILLMATE_TEXT_TITLE);
+            //$this->title = $tmp[0] . 'Billmate';
+			$this->title = MODULE_PAYMENT_PCBILLMATE_TEXT_TITLE;
         }
 
         $this->pcbillmate_testmode = false;

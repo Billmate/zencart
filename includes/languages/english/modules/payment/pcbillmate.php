@@ -94,7 +94,7 @@ define('MODULE_PAYMENT_PCBILLMATE_CONDITIONS','Terms and conditions');
 define('MODULE_PAYMENT_PCBILLMATE_ADDR_NOTICE','Your billing and shipping address will be automatically updated to your registered address.');
 define('MODULE_PAYMENT_PCBILLMATE_CHOOSECONSUMERCREDIT','Select installment');
 
-define('MODULE_PAYMENT_PCBILLMATE_TITLE', 'Part payment - Bill Mate from xx / month'); //replace xx with amount + currency (e.g. 100 kr)
+define('MODULE_PAYMENT_PCBILLMATE_TITLE', 'Billmate part payment from xx / month'); //replace xx with amount + currency (e.g. 100 kr)
 define('MODULE_PAYMENT_PCBILLMATE_WITHOUT_TAX', 'Prices are excluding VAT');
 
 
