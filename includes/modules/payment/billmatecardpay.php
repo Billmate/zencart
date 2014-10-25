@@ -78,7 +78,7 @@ class billmatecardpay {
 
 		(MODULE_PAYMENT_BILLMATECARDPAY_TESTMODE != 'True') ? $this->billmatecardpay_livemode = true : $this->billmatecardpay_livemode = false;
 
-		$this->description = MODULE_PAYMENT_BILLMATECARDPAY_TEXT_DESCRIPTION . "<br />Version: 1.4";
+		$this->description = MODULE_PAYMENT_BILLMATECARDPAY_TEXT_DESCRIPTION . "<br />Version: 1.5";
 		$this->enabled = ((MODULE_PAYMENT_BILLMATECARDPAY_STATUS == 'True') ?
 		true : false);
 

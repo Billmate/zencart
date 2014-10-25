@@ -10,7 +10,7 @@ if(empty($_GET['test'])) {
 }
 
 $bill_address = $ship_address = array(
-	"email" => "vipan.eminence@gmail.com",
+	"email" => "gagan@combain.com",
     "telno" => "0760123456",
     "cellno" => "0760123456",
     "fname" => "test kumar",

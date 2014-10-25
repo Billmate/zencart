@@ -72,7 +72,7 @@ class billmate_invoice {
 			$this->billmate_livemode = false;
         }
 
-        $this->description = MODULE_PAYMENT_BILLMATE_TEXT_DESCRIPTION . "<br />Version: 1.4";
+        $this->description = MODULE_PAYMENT_BILLMATE_TEXT_DESCRIPTION . "<br />Version: 1.5";
         $this->enabled = ((MODULE_PAYMENT_BILLMATE_STATUS == 'True') ?
                 true : false);
 
@@ -270,6 +270,8 @@ class billmate_invoice {
 
         // Set error reasons
         $errors = array();
+		unset($_SESSION['error']);
+		unset($_SESSION['WrongAddress']);
 
         //Fill user array with billing details
         $user_billing['billmate_pnum'] = $_POST['billmate_pnum'];
@@ -289,7 +291,8 @@ class billmate_invoice {
 		}
         if (!empty($errors)) {
 			$_SESSION['error'] = implode(', ', $errors);
-            zen_redirect( zen_href_link(FILENAME_CHECKOUT_PAYMENT).'&payment_error=billmate_invoice&error=true' );
+			return;
+            //zen_redirect( zen_href_link(FILENAME_CHECKOUT_PAYMENT).'&payment_error=billmate_invoice&error=true' );
         }
 
         $pno = $this->billmate_pnum = $_POST['billmate_pnum'];
@@ -302,7 +305,7 @@ class billmate_invoice {
 		$ssl = true;
 		$debug = false;
 
-		$k = new BillMate((int)$eid,(float)$secret,$ssl,$debug);
+		$k = new BillMate((int)$eid,(float)$secret,$ssl,$debug,$this->billmate_testmode);
 		$result = $k->getAddress( $pno );
 
         if (!is_array($result)) {

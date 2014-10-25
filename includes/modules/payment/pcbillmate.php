@@ -66,7 +66,7 @@ class pcbillmate extends base{
             $this->title .= ' '.MODULE_PAYMENT_PCBILLMATE_TESTMODE_TITLE;
         }
 
-        $this->description = MODULE_PAYMENT_PCBILLMATE_TEXT_DESCRIPTION . "<br />Version: 1.4";
+        $this->description = MODULE_PAYMENT_PCBILLMATE_TEXT_DESCRIPTION . "<br />Version: 1.5";
         $this->enabled = ((MODULE_PAYMENT_PCBILLMATE_STATUS == 'True') ? true : false);
 
         if($this->enabled) {
@@ -268,6 +268,8 @@ class pcbillmate extends base{
 
         // Set error reasons
         $errors = array();
+		unset($_SESSION['error']);
+		unset($_SESSION['WrongAddress']);
 
         //Fill user array with billing details
         $user_billing['pcbillmate_pnum'] = $_POST['pcbillmate_pnum'];
@@ -288,6 +290,7 @@ class pcbillmate extends base{
         if (!empty($errors)) {
             $error_message = implode(', ', $errors);
 			$_SESSION['error'] = $error_message;
+			return;
             //zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=pcbillmate&error='.$error_message, 'NONSSL'));
 			zen_redirect( zen_href_link(FILENAME_CHECKOUT_PAYMENT).'&payment_error=pcbillmate&error=true' );
         }
@@ -304,7 +307,7 @@ class pcbillmate extends base{
 		$ssl = true;
 		$debug = false;
 
-		$k = new BillMate((int)$eid,(float)$secret,$ssl,$debug);
+		$k = new BillMate((int)$eid,(float)$secret,$ssl,$debug, $this->pcbillmate_testmode );
 		$result = $k->getAddress( $pno );
        // $status = get_addresses($eid, BillmateUtils::convertData($pno), $secret, $pnoencoding, $type, $result);
         if (!is_array($result)) {
@@ -808,7 +811,7 @@ class pcbillmate extends base{
 		$ssl = true;
 		$debug = false;
 
-		$k = new BillMate($eid,$secret,$ssl,$debug);
+		$k = new BillMate($eid,$secret,$ssl,$debug, $this->pcbillmate_testmode);
 		$result1 = $k->AddInvoice($pno,$ship_address,$bill_address,$goodsList,$transaction);
         if (is_array($result1)) {
 
