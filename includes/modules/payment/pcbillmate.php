@@ -66,7 +66,7 @@ class pcbillmate extends base{
             $this->title .= ' '.MODULE_PAYMENT_PCBILLMATE_TESTMODE_TITLE;
         }
 
-        $this->description = MODULE_PAYMENT_PCBILLMATE_TEXT_DESCRIPTION . "<br />Version: 1.5";
+        $this->description = MODULE_PAYMENT_PCBILLMATE_TEXT_DESCRIPTION . "<br />Version: 1.6";
         $this->enabled = ((MODULE_PAYMENT_PCBILLMATE_STATUS == 'True') ? true : false);
 
         if($this->enabled) {
