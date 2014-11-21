@@ -49,7 +49,7 @@ function isEqual($string1, $string2 ){
 	//var_dump($filterStr1, $filterStr2);
 	//echo '<hr/>';
 	$foundName = array_intersect( $filterStr1, $filterStr2 );
-	return count($foundName)>0;
+	return (count($foundName)==count($filterStr1));
 }
 
 

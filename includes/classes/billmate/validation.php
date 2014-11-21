@@ -47,16 +47,17 @@
  *
  * @return bool
  */
-function validate_pno_se($pno) {
-    $result = false;
-
-    //Pno has 10-13 characters
-    if (check_length_ge($pno, 10) && check_length_le($pno, 13)) {
-        $result = true;
-    }
-    return $result;
+if( !function_exists('validate_pno_se') ) { 
+	function validate_pno_se($pno) {
+		$result = false;
+	
+		//Pno has 10-13 characters
+		if (check_length_ge($pno, 10) && check_length_le($pno, 13)) {
+			$result = true;
+		}
+		return $result;
+	}
 }
-
 /**
  * Check E-Mail
  *
@@ -67,12 +68,13 @@ function validate_pno_se($pno) {
  *
  * @return bool
  */
-function validate_email($email) {
-    //Regular expression for the email check
-    $exp = "/^[_a-zA-Z0-9-]+(\.[_a-zA-Z0-9-]+)*@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z0-9-][a-zA-Z0-9-]+)+$/";
-    return check_regexp($email, $exp);
+if( !function_exists('validate_email') ) { 
+	function validate_email($email) {
+		//Regular expression for the email check
+		$exp = "/^[_a-zA-Z0-9-]+(\.[_a-zA-Z0-9-]+)*@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z0-9-][a-zA-Z0-9-]+)+$/";
+		return check_regexp($email, $exp);
+	}
 }
-
 /**
  * Searches a string for matches to the regular expression
  *
@@ -82,14 +84,15 @@ function validate_email($email) {
  *
  * @return bool
  */
-function check_regexp ($field, $exp) {
-    if(preg_match($exp, $field)) {
-        return true;
-    } else {
-        return false;
-    }
+if( !function_exists('check_regexp') ) { 
+	function check_regexp ($field, $exp) {
+		if(preg_match($exp, $field)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 }
-
 /**
  * Check lengh of a string, is greater than or equal
  *
@@ -99,14 +102,15 @@ function check_regexp ($field, $exp) {
  *
  * @return bool
  */
-function check_length_ge ($field, $lenght) {
-    if(strlen($field) >= $lenght) {
-        return true;
-    } else {
-        return false;
-    }
+if( !function_exists('check_length_ge') ) { 
+	function check_length_ge ($field, $lenght) {
+		if(strlen($field) >= $lenght) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 }
-
 /**
  * Check lengh of a string, is less than or equal
  *
@@ -116,14 +120,15 @@ function check_length_ge ($field, $lenght) {
  *
  * @return bool
  */
-function check_length_le ($field, $lenght) {
-    if(strlen($field) <= $lenght) {
-        return true;
-    } else {
-        return false;
-    }
+if( !function_exists('check_length_le') ) { 
+	function check_length_le ($field, $lenght) {
+		if(strlen($field) <= $lenght) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 }
-
 /**
  * Check lengh of a string, is equal
  *
@@ -133,11 +138,13 @@ function check_length_le ($field, $lenght) {
  *
  * @return bool
  */
-function check_length_e ($field, $lenght) {
-    if(strlen($field) == $lenght) {
-        return true;
-    } else {
-        return false;
-    }
+if( !function_exists('check_length_e') ) { 
+	function check_length_e ($field, $lenght) {
+		if(strlen($field) == $lenght) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 }
 ?>

@@ -45,7 +45,22 @@
   define('MODULE_PAYMENT_BILLMATE_PERSON_NUMBER','Persnr / Orgnr');
   define('MODULE_PAYMENT_BILLMATE_EMAIL','Min e-postadress %s är korrekt och får användas för fakturering.');
   define('MODULE_PAYMENT_BILLMATE_ADDR_TITLE','Observera');
-  define('MODULE_PAYMENT_BILLMATE_CONDITIONS','Köpvillkor');
+  define('MODULE_PAYMENT_BILLMATE_CONDITIONS','<a id="terms" href="javascript:;">Köpvillkor</a> 
+  	  <script>
+		if (typeof jQuery == \'undefined\') {
+			var script = document.createElement(\'script\');
+			script.type = "text/javascript";
+			script.src = "http://code.jquery.com/jquery-1.9.1.js";
+			document.getElementsByTagName(\'head\')[0].appendChild(script);
+		}
+	  </script>
+		<script type="text/javascript">
+			jQuery(function(){
+			  $.getScript("https://efinance.se/billmate/base.js", function(){
+				$("#terms").Terms("villkor",{invoicefee: 0});
+			  });
+			});
+		</script>');
   define('MODULE_PAYMENT_BILLMATE_ADDR_NOTICE','Din faktura- och leveransadress kommer att uppdateras automatiskt till din folkbokförda adress.');
   
   define('MODULE_PAYMENT_BILLMATE_ORDER_LIMIT_TITLE', 'kreditgräns');

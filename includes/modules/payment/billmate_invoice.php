@@ -291,8 +291,8 @@ class billmate_invoice {
 		}
         if (!empty($errors)) {
 			$_SESSION['error'] = implode(', ', $errors);
+			zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=billmate_invoice&error=true', 'SSL', true, false));
 			return;
-            //zen_redirect( zen_href_link(FILENAME_CHECKOUT_PAYMENT).'&payment_error=billmate_invoice&error=true' );
         }
 
         $pno = $this->billmate_pnum = $_POST['billmate_pnum'];

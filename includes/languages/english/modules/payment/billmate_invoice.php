@@ -44,7 +44,22 @@
   define('MODULE_PAYMENT_BILLMATE_PERSON_NUMBER','Personal Number');
   define('MODULE_PAYMENT_BILLMATE_EMAIL','My email %s is accurate and can be used for billing');
   define('MODULE_PAYMENT_BILLMATE_ADDR_TITLE','Note');
-  define('MODULE_PAYMENT_BILLMATE_CONDITIONS','Terms and conditions');
+  define('MODULE_PAYMENT_BILLMATE_CONDITIONS','<a id="terms" href="javascript:;">Terms and conditions</a> 
+  	  <script>
+		if (typeof jQuery == \'undefined\') {
+			var script = document.createElement(\'script\');
+			script.type = "text/javascript";
+			script.src = "http://code.jquery.com/jquery-1.9.1.js";
+			document.getElementsByTagName(\'head\')[0].appendChild(script);
+		}
+	  </script>
+		<script type="text/javascript">
+			jQuery(function(){
+			  $.getScript("https://efinance.se/billmate/base.js", function(){
+				$("#terms").Terms("villkor",{invoicefee: 0});
+			  });
+			});
+		</script>');
   define('MODULE_PAYMENT_BILLMATE_ADDR_NOTICE','Your billing and shipping address will be automatically updated to your registered address.');
   define('MODULE_PAYMENT_BILLMATE_ORDER_LIMIT_TITLE', 'Credit limit');
   define('MODULE_PAYMENT_BILLMATE_ORDER_LIMIT_DESC', 'Only show this payment alternative for orders less than the value below.');

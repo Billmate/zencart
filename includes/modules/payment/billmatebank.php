@@ -151,7 +151,7 @@ class billmatebank {
 		} else{
 			$order_status_id = $_r['orders_status_id'];
 		}
-		$db->Execute("insert ignore into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Cancelled Order Status', 'MODULE_PAYMENT_BILLMATECARDPAY_CANCEL', '{$order_status_id}', '', '6', '0', '', now())");
+		$db->Execute("insert ignore into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Cancelled Order Status', 'MODULE_PAYMENT_BILLMATEBANK_CANCEL', '{$order_status_id}', '', '6', '0', '', now())");
 	}
 
     // class methods
@@ -359,6 +359,14 @@ class billmatebank {
 
             zen_db_perform(TABLE_ORDERS_TOTAL, $sql_data_array);
           }
+
+		  $customer_notification = (SEND_EMAILS == 'true') ? '1' : '0';
+		  $sql_data_array = array('orders_id' => $insert_id, 
+								  'orders_status_id' => $order->info['order_status'], 
+								  'date_added' => 'now()', 
+								  'customer_notified' => $customer_notification,
+								  'comments' => $order->info['comments']);
+		  zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
 
           for ($i=0, $n=sizeof($order->products); $i<$n; $i++) {
             $sql_data_array = array('orders_id' => $insert_id,
@@ -1137,8 +1145,9 @@ class billmatebank {
                 'MODULE_PAYMENT_BILLMATEBANK_ORDER_TOTAL_IGNORE',
                 'MODULE_PAYMENT_BILLMATEBANK_TESTMODE',
                 'MODULE_PAYMENT_BILLMATEBANK_ZONE',
+                'MODULE_PAYMENT_BILLMATEBANK_SORT_ORDER',
 				'MODULE_PAYMENT_BILLMATEBANK_CANCEL',
-                'MODULE_PAYMENT_BILLMATEBANK_SORT_ORDER');
+				);
     }
 
 }

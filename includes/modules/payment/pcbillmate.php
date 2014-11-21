@@ -228,7 +228,7 @@ class pcbillmate extends base{
         $js = "";
 
         $fields=array(
-                array('title' => BILLMATE_LANG_SE_IMGCONSUMERCREDIT,
+                array('title' => BILLMATE_LANG_SE_IMGCONSUMERCREDIT.sprintf(MODULE_PAYMENT_PCBILLMATE_CONDITIONS, $eid),
                         'field' => $js.$error),
                 array('title' => MODULE_PAYMENT_PCBILLMATE_CHOOSECONSUMERCREDIT,
                         'field' => zen_draw_pull_down_menu('pcbillmate_pclass', $pclasses, $default)),
@@ -290,9 +290,8 @@ class pcbillmate extends base{
         if (!empty($errors)) {
             $error_message = implode(', ', $errors);
 			$_SESSION['error'] = $error_message;
+			zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=pcbillmate&error=true', 'SSL', true, false));
 			return;
-            //zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=pcbillmate&error='.$error_message, 'NONSSL'));
-			zen_redirect( zen_href_link(FILENAME_CHECKOUT_PAYMENT).'&payment_error=pcbillmate&error=true' );
         }
 
         $pno = $this->pcbillmate_pnum = $_POST['pcbillmate_pnum'];

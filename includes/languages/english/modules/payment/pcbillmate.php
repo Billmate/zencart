@@ -90,7 +90,23 @@ define('MODULE_PAYMENT_PCBILLMATE_ERRORDIVIDE', 'Billmate Account - error');
 define('MODULE_PAYMENT_PCBILLMATE_PERSON_NUMBER','Personal Number');
 define('MODULE_PAYMENT_PCBILLMATE_EMAIL','My email %s is accurate and can be used for billing');
 define('MODULE_PAYMENT_PCBILLMATE_ADDR_TITLE','Note');
-define('MODULE_PAYMENT_PCBILLMATE_CONDITIONS','Terms and conditions');
+define('MODULE_PAYMENT_PCBILLMATE_CONDITIONS','<a id="terms-delbetalning" href="javascript:;">Terms and conditions</a> 
+  	  <script>
+		if (typeof jQuery == \'undefined\') {
+			var script = document.createElement(\'script\');
+			script.type = "text/javascript";
+			script.src = "http://code.jquery.com/jquery-1.9.1.js";
+			document.getElementsByTagName(\'head\')[0].appendChild(script);
+		}
+	  </script>
+		<script type="text/javascript">
+			var eid = "%s";
+			jQuery(function(){
+			  $.getScript("https://efinance.se/billmate/base.js", function(){
+				$("#terms-delbetalning").Terms("villkor_delbetalning",{eid: eid,effectiverate:34});
+			  });
+			});
+		</script>');
 define('MODULE_PAYMENT_PCBILLMATE_ADDR_NOTICE','Your billing and shipping address will be automatically updated to your registered address.');
 define('MODULE_PAYMENT_PCBILLMATE_CHOOSECONSUMERCREDIT','Select installment');
 
