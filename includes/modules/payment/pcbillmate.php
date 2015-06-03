@@ -29,7 +29,8 @@
  */
 //error_reporting(E_ALL);
 //ini_set('display_errors', true);
-
+error_reporting(E_ERROR);
+ini_set('display_errors', true);
 @session_start();
 $includeLoopVariable = $i;
 @include_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmate_lang.php');
@@ -701,13 +702,12 @@ class pcbillmate extends base{
                 if($code == 'ot_shipping') {
                     $flags += 8; //IS_SHIPMENT
                 }
-/*
+
                 if(DISPLAY_PRICE_WITH_TAX == 'true') {
-                    $price_with_tax = $currencies->get_value($currency) * $value * 100;
-                } else {
-                    $price_with_tax = $currencies->get_value($currency) * $value * 100*(($tax/100)+1);
-                }*/
-				
+                    $flags += 32;
+                }
+
+
 				$price_with_tax = $currencies->get_value($currency) * $value * 100;
                 
 				if ($value != "" && $value != 0) {
@@ -982,7 +982,7 @@ class pcbillmate extends base{
     }
 
     function keys() {
-        global $pcbillmate_testmode, $BILL_ISO3166_SE;
+        global $pcbillmate_testmode, $BILL_ISO3166_SE,$BILL_SEK,$BILL_ISO639_SE;
 
         //Set the right Host and Port
         $livemode = $this->pcbillmate_testmode == false;
@@ -996,7 +996,7 @@ class pcbillmate extends base{
 
                 $result = false;
                 fetch_pclasses($eid, $BILL_SEK, $secret, $BILL_ISO3166_SE, $BILL_ISO639_SE, $result);
-
+                error_log(print_r($result,true));
                 BillmateUtils::update_pclasses(MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, $result);
            // }
            // if (( isset($_GET['view_pclasses']) && $_GET['view_pclasses'] == TRUE) || ( isset($_GET['get_pclasses']) && $_GET['get_pclasses'] == TRUE) ) {

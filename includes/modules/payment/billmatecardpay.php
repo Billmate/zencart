@@ -260,7 +260,7 @@ class billmatecardpay {
 	}
 
 	function confirmation() {
-		global $cartID, $cart_billmate_card_ID, $customer_id, $languages_id, $order, $order_total_modules,$db;
+		global $cartID, $cart_billmate_card_ID, $customer_id, $languages_id, $order, $order_total_modules,$db,$currencies;
 		
 		$customer_id = $_SESSION['customer_id'];
 		$cartID = $_SESSION['cart']->cartID;
@@ -690,10 +690,9 @@ class billmatecardpay {
 					$flags += 16; //IS_HANDLING
 				}
 
-				/*                if(DISPLAY_PRICE_WITH_TAX == 'true') {
-				} else {
-				$price_with_tax = $currencies->get_value($currency) * $value * 100*(($tax/100)+1);
-				}*/
+                if(DISPLAY_PRICE_WITH_TAX == 'true') {
+                    $flags += 32;
+                }
 
 				$price_with_tax = $currencies->get_value($currency) * $value * 100;
 
@@ -888,10 +887,9 @@ class billmatecardpay {
 					$flags += 16; //IS_HANDLING
 				}
 
-				/*                if(DISPLAY_PRICE_WITH_TAX == 'true') {
-				} else {
-				$price_with_tax = $currencies->get_value($currency) * $value * 100*(($tax/100)+1);
-				}*/
+				if(DISPLAY_PRICE_WITH_TAX == 'true') {
+                    $flags += 32;
+				}
 
 				$price_with_tax = $currencies->get_value($currency) * $value * 100;
 
