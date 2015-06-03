@@ -260,7 +260,7 @@ class billmatecardpay {
 	}
 
 	function confirmation() {
-		global $cartID, $cart_billmate_card_ID, $customer_id, $languages_id, $order, $order_total_modules,$db;
+		global $cartID, $cart_billmate_card_ID, $customer_id, $languages_id, $order, $order_total_modules,$db,$currencies;
 		
 		$customer_id = $_SESSION['customer_id'];
 		$cartID = $_SESSION['cart']->cartID;

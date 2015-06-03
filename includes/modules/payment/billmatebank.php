@@ -236,7 +236,7 @@ class billmatebank {
     }
 
     function confirmation() {
-		global $cartID, $cart_billmate_bank_ID, $customer_id, $languages_id, $order, $order_total_modules,$db;
+		global $cartID, $cart_billmate_bank_ID, $customer_id, $languages_id, $order, $order_total_modules,$db,$currencies;
 		
 		$cartID = $_SESSION['cart']->cartID;
 		$customer_id = $_SESSION['customer_id'];
