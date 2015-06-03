@@ -350,7 +350,7 @@ class billmate_invoice {
 		    !isEqual($order->billing['city'], $order->delivery['city']) || 
 		    !isEqual($order->billing['country']['iso_code_3'], $order->delivery['country']['iso_code_3']) ;
 
-        if( $resultessNotMatched || $shippingAndBilling ){
+        if( $addressNotMatched || $shippingAndBilling ){
             if( empty($_POST['geturl'])){
 	            $html = '<p><b>'.MODULE_PAYMENT_BILLMATE_CORRECT_ADDRESS.' </b></p>'.($result[0][0]).' '.$result[0][1].'<br>'.$result[0][2].'<br>'.$result[0][3].' '.$result[0][4].'<div style="padding: 17px 0px;"> <i>'.MODULE_PAYMENT_BILLMATE_CORRECT_ADDRESS_OPTION.'</i></div> <input type="button" value="'.MODULE_PAYMENT_BILLMATE_YES.'" onclick="updateAddress();" class="button"/> <input type="button" value="'.MODULE_PAYMENT_BILLMATE_NO.'" onclick="closefunc(this)" class="button" style="float:right" />';
 	            $code = '<style type="text/css">
@@ -720,12 +720,10 @@ class billmate_invoice {
 				if( $code == 'ot_billmate_fee' ){
 					$flags = 16;
 				}
-/*
+
                 if(DISPLAY_PRICE_WITH_TAX == 'true') {
-                    $price_with_tax = $currencies->get_value($currency) * $value * 100;
-                } else {
-                    $price_with_tax = $currencies->get_value($currency) * $value * 100*(($tax/100)+1);
-                }*/
+                    $flags += 32;
+                }
 				
 				$price_with_tax = $currencies->get_value($currency) * $value * 100;
                 

@@ -665,11 +665,10 @@ class billmatebank {
 	                else if($code == 'ot_'.$this->code.'_fee') {
 	                    $flags += 16; //IS_HANDLING
 	                }
-	
-	/*                if(DISPLAY_PRICE_WITH_TAX == 'true') {
-	                } else {
-	                    $price_with_tax = $currencies->get_value($currency) * $value * 100*(($tax/100)+1);
-	                }*/
+
+                    if(DISPLAY_PRICE_WITH_TAX == 'true') {
+                        $flags += 32;
+                    }
 	
 					$price_with_tax = $currencies->get_value($currency) * $value * 100;
 	
@@ -866,10 +865,9 @@ class billmatebank {
                     $flags += 16; //IS_HANDLING
                 }
 
-/*                if(DISPLAY_PRICE_WITH_TAX == 'true') {
-                } else {
-                    $price_with_tax = $currencies->get_value($currency) * $value * 100*(($tax/100)+1);
-                }*/
+                if(DISPLAY_PRICE_WITH_TAX == 'true') {
+                    $flags += 32;
+                }
 
 				$price_with_tax = $currencies->get_value($currency) * $value * 100;
 

@@ -82,7 +82,7 @@ class BillmateUtils {
 
         $pclasses = self::get_pclasses($table, $country);
         foreach($pclasses as &$pclass) {
-			$pclass['description'] = utf8_decode($pclass['description']);
+			//$pclass['description'] = utf8_decode($pclass['description']);
             if($total >= ($pclass['minamount']/100) && ($total <= ($pclass['maxamount']/100) || $pclass['maxamount'] == 0 ) ) {
                 if($pclass['type'] < 2) {
                     $pclass['minpay'] = ceil(BillmateCalc::calc_monthly_cost($total, $pclass['months'], $pclass['fee']/100, $pclass['startfee']/100, $pclass['interest']/100, $pclass['type'], $flags, $country));
@@ -196,10 +196,14 @@ class BillmateUtils {
 		global $db;
         if(strlen(trim($table)) > 0) {
             self::create_db($table); //incase it doesn't exist, below will not cause an error.
-            $query = mysql_query("SELECT * FROM `".$table."` WHERE `country` = '".$country."'");
+            $query = $db->Execute("SELECT * FROM `".$table."` WHERE `country` = '".$country."'");
             $tmp = array();
-            while($row = mysql_fetch_assoc($query)) {
-                $tmp[] = $row;
+            if($query->RecordCount() > 0) {
+
+                while (!$query->EOF) {
+                    $tmp[] = $query->fields;
+                    $query->MoveNext();
+                }
             }
             return $tmp;
         }
@@ -315,7 +319,7 @@ class BillmateUtils {
     }
 
     /**
-     * @author   "Sebastián Grignoli" <grignoli@framework2.com.ar>
+     * @author   "Sebastiï¿½n Grignoli" <grignoli@framework2.com.ar>
      * @package  forceUTF8
      * @version  1.1
      * @link     http://www.framework2.com.ar/dzone/forceUTF8-es/
@@ -329,15 +333,15 @@ class BillmateUtils {
          *
          * It may fail to convert characters to unicode if they fall into one of these scenarios:
          *
-         * 1) when any of these characters:   ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞß
+         * 1) when any of these characters:   ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
          *    are followed by any of these:  ("group B")
-         *                                    ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶?¸¹º»¼½¾¿
-         * For example:   %ABREPRESENT%C9%BB. «REPRESENTÉ»
-         * The "«" (%AB) character will be converted, but the "É" followed by "»" (%C9%BB)
+         *                                    ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½?ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+         * For example:   %ABREPRESENT%C9%BB. ï¿½REPRESENTÉ»
+         * The "ï¿½" (%AB) character will be converted, but the "ï¿½" followed by "ï¿½" (%C9%BB)
          * is also a valid unicode character, and will be left unchanged.
          *
-         * 2) when any of these: àáâãäåæçèéêëìíîï  are followed by TWO chars from group B,
-         * 3) when any of these: ðñòó  are followed by THREE chars from group B.
+         * 2) when any of these: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  are followed by TWO chars from group B,
+         * 3) when any of these: ï¿½ï¿½ï¿½ï¿½  are followed by THREE chars from group B.
          *
          * @name forceUTF8
          * @param string $text  Any string.
