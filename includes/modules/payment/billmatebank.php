@@ -480,7 +480,7 @@ class billmatebank {
     }
 
     function process_button() {
-        global $order, $order_total_modules, $billmatebank_ot, $shipping, $db, $languages_id,$cart_billmate_bank_ID;
+        global $order, $order_total_modules, $billmatecardpay_ot, $shipping, $db, $languages_id,$cart_billmate_card_ID, $currencies;
 		$cart_billmate_bank_ID = $_SESSION['cart_billmate_bank_ID'];
 				
         $counter = 1;
@@ -493,7 +493,9 @@ class billmatebank {
 				$languageCode = $languageCode == 'DA' ? 'DK' : $languageCode;
 				$languageCode = $languageCode == 'SV' ? 'SE' : $languageCode;
 				$languageCode = $languageCode == 'EN' ? 'GB' : $languageCode;
-    
+
+        $currencyRate = $currencies->get_value($order->info['currency']);
+
         $eid = MODULE_PAYMENT_BILLMATEBANK_EID;
         $secret = substr( MODULE_PAYMENT_BILLMATEBANK_SECRET ,0 ,12 );
 		unset($_SESSION['bank_api_called']);
@@ -503,7 +505,7 @@ class billmatebank {
 				$_['order_id']      = substr($cart_billmate_bank_ID, strpos($cart_billmate_bank_ID, '-')+1);;
 				$_['callback_url']  = 'http://api.billmate.se/callback.php';
 				//$_['callback_url']  = 'http://'.$_SERVER['SERVER_NAME'].'/'.DIR_WS_CATALOG.'extras/billmate/billmate_ipn.php';
-				$_['amount']        = round($order->info['total'], 2)*100;
+                $_['amount']        = round($order->info['total'] * $currencyRate * 100);
 				$_['accept_url']    = zen_href_link(FILENAME_CHECKOUT_PROCESS);
 				$_['cancel_url']    = zen_href_link(FILENAME_CHECKOUT_PAYMENT);
 				$_['pay_method']    = 'BANK';
