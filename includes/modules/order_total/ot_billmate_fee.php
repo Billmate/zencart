@@ -152,7 +152,7 @@ class ot_billmate_fee {
 
         if (!isset($this->check)) {
             $check_query = $db->Execute("select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = 'MODULE_BILLMATE_FEE_STATUS'");
-            $this->check = $check_query->RecordCount();
+            $this->check = $check_query->RecordCount() > 0 ? true : false;
         }
         return $this->check;
     }
