@@ -12,7 +12,7 @@ define('BILLMATE_VERSION',  "PHP:ZenCart:".PLUGIN_VERSION );
 
 require_once(dirname( __FILE__ )."/lib/xmlrpc.inc");
 require_once(dirname( __FILE__ )."/lib/xmlrpcs.inc");
-require_once dirname(__FILE__).'/BillMate.php';
+require_once dirname(__FILE__).'/Billmate.php';
 
 function mk_goods_flags($qty, $artno, $title, $price, $vat, $discount, $flags){
 	our_settype_integer($qty);

@@ -231,6 +231,7 @@ class BillmateCalc {
         return $payarray;
     }
 
+
     /**
      * Calculates how much you have to pay each month if you want to
      * pay exactly the same amount each month. The interesting input
@@ -303,6 +304,142 @@ class BillmateCalc {
         }
     }
 
+    /**
+     * Calculate the APR for an annuity given the following inputs.
+     *
+     * If you give it bad inputs, it will return negative values.
+     *
+     * @param  float  $pval   principal value
+     * @param  int    $months months to pay off in
+     * @param  float  $rate   interest rate in % as before
+     * @param  float  $fee    monthly fee
+     * @param  float  $minpay minimum payment per month
+     * @return float  APR in %
+     */
+    private static function apr_annuity($pval, $months, $rate, $fee, $minpay) {
+        $payment = self::annuity($pval, $months, $rate) + $fee;
+        if($payment < 0) {
+            return $payment;
+        }
+        $payarray = self::fulpacc($pval, $rate, $fee, $minpay, $payment, $months, false);
+        $apr = self::irr2apr(self::irr($pval, $payarray, 1));
+
+        return $apr;
+    }
+
+    /**
+     * Calculate the APR given a fixed payment each month.
+     *
+     * If you give it bad inputs, it will return negative values.
+     *
+     * @param  float  $pval    principal value
+     * @param  float  $payment monthly payment for client
+     * @param  float  $rate    interest rate in % as before
+     * @param  float  $fee     monthly fee
+     * @param  float  $minpay  minimum payment per month
+     * @return float  APR in %
+     */
+    private static function apr_fixed($pval, $payment, $rate, $fee, $minpay) {
+        $months = self::fixed($pval, $payment-$fee, $rate, 1);
+        if($months < 0) {
+            return $months;
+        }
+        $months = ceil($months);
+        $payarray = self::fulpacc($pval, $rate, $fee, $minpay, $payment, $months, false);
+        $apr = self::irr2apr(self::irr($pval, $payarray, 1));
+
+        return $apr;
+    }
+
+    /**
+     * This tries to pay the absolute minimum each month.
+     * Give the absolute worst APR.
+     * Don't export, only here for reference.
+     *
+     * @param  float  $pval    principal value
+     * @param  float  $rate    interest rate in % as before
+     * @param  float  $fee     monthly fee
+     * @param  float  $minpay  minimum payment per month
+     * @return float  APR in %
+     */
+    private static function apr_min($pval, $rate, $fee, $minpay) {
+        $payarray = self::fulpacc($pval, $rate, $fee, $minpay, 0.0, -1, true);
+        $apr = self::irr2apr(self::irr($pval, $payarray, 1));
+
+        return $apr;
+    }
+
+    /**
+     * Calculates APR for a campaign where you give $free months to
+     * the client and there is no interest on the first invoice.
+     * The only new input is $free, and if you give "Pay in Jan"
+     * in November, then $free = 2.
+     *
+     * The more free months you give, the lower the APR so it does
+     * matter.
+     *
+     * This function basically pads the $payarray with zeros in the
+     * beginning (but there is some more magic as well).
+     *
+     * @param  float  $pval    principal value
+     * @param  float  $payment monthly payment for client
+     * @param  float  $rate    interest rate in % as before
+     * @param  float  $fee     monthly fee
+     * @param  int    $free    free months
+     * @param  float  $minpay  minimum payment per month
+     * @return float  APR in %
+     */
+    private static function apr_payin_X_months($pval, $payment, $rate, $fee, $minpay, $free) {
+        $firstpay = $payment; //this used to be buggy. use this line.
+        $months = self::fixed($pval, $payment-$fee, $rate, 0);
+        if($months < 0) {
+            return $months;
+        }
+
+        $months = ceil($months);
+        $newpval = $pval - $firstpay;
+        $farray = array();
+        while($free--) {
+            $farray[] = 0.0;
+        }
+        $pval += $fee;
+
+        $farray[] = $firstpay;
+        $pval -= $firstpay;
+        $payarray = self::fulpacc($pval, $rate, $fee, $minpay, $payment, $months, false);
+        $newarray = array_merge($farray, $payarray);
+        $apr = self::irr2apr(self::irr($pval, $newarray, 1));
+
+        return $apr;
+    }
+
+    /**
+     * Calculates APR for the specified values.
+     * 
+     * @param float  $pval      principal value
+     * @param float  $payment   monthly payment for client
+     * @param int    $months    months to pay of in
+     * @param float  $rate      interest rate in % as before
+     * @param float  $fee       monthly fee
+     * @param float  $minpay    minimum payment per month
+     * @param int    $type      pclass type
+     * @param int    $free      free months
+     * @return float  APR in %
+     */
+    public static function calc_apr($pval, $payment, $months, $rate, $fee, $minpay, $type, $free = 0) {
+        switch($type) {
+            case 0:
+            case 1:
+                return self::apr_annuity($pval, $months, $rate, $fee, $minpay);
+                break;
+            case 2:
+                return self::apr_payin_X_months($pval, $payment, $rate, $fee, $minpay, $free);
+                break;
+            case 3:
+                return self::apr_fixed($pval, $payment, $rate, $fee, $minpay);
+                break;
+        }
+    }
 
     /**
      * Calculates the total credit purchase cost.
@@ -339,7 +476,7 @@ class BillmateCalc {
     /**
      * Calculates the monthly cost for the specified pclass.
      *
-     * @param  int   $sum          The sum for the order/product in ören/cents
+     * @param  int   $sum          The sum for the order/product in ï¿½ren/cents
      * @param  int   $months       Number of months.
      * @param  int   $fee          fee for the pclass.
      * @param  int   $startfee     Starting fee for the pclass.
@@ -349,6 +486,7 @@ class BillmateCalc {
      * @param  int   $country      The Billmate country.
      * @return int/float  The monthly cost.
      */
+	/*
     public static function calc_monthly_cost($sum, $months, $fee, $startfee, $rate, $type, $flags, $country) {
         $monthsfee = ($flags == 0 ? $fee : 0);
         $startfee = ($flags == 0 ? $startfee : 0);
@@ -359,7 +497,69 @@ class BillmateCalc {
         $payarr = self::fulpacc($sum, $rate, $monthsfee, $minamount, $payment, $months, $account);
 
         return isset($payarr[0]) ? $payarr[0] : 0;
-    }
+    }*/
+
+	private static function _getPayArray($sum, $pclass, $flags)
+	{
+		$monthsfee = 0;
+		if ($flags === BillmateFlags::CHECKOUT_PAGE)
+			$monthsfee = $pclass['handlingfee'];
+
+		$startfee = 0;
+		if ($flags === BillmateFlags::CHECKOUT_PAGE)
+			$startfee = $pclass['startfee'];
+
+		$sum += $startfee;
+		$base   = true;//($pclass['type'] === BillmatePClass::ACCOUNT);
+		$lowest = self::get_lowest_payment_for_account($pclass['country']);
+
+		if ($flags == BillmateFlags::CHECKOUT_PAGE)
+			$minpay = $lowest;
+		else
+			$minpay = 0;
+
+		$payment = self::annuity(
+			$sum,
+			$pclass['nbrofmonths'],
+			$pclass['interestrate']
+		);
+		$payment += $monthsfee;
+
+		return self::fulpacc(
+			$sum,
+			$pclass['interestrate'],
+			$monthsfee,
+			$minpay,
+			$payment,
+			$pclass['nbrofmonths'],
+			$base
+		);
+	}
+
+	public static function calc_monthly_cost($sum, $pclass, $flags)
+	{
+		if (!is_numeric($sum))
+			throw new Exception('sum', 'numeric');
+
+		if (is_numeric($sum) && (!is_int($sum) || !is_float($sum)))
+			$sum = (float)$sum;
+
+		if (is_numeric($flags) && !is_int($flags))
+			$flags = (int)$flags;
+
+
+
+		$payarr = self::_getPayArray($sum, $pclass, $flags);
+		$value  = 0;
+		if (isset($payarr[0]))
+			$value = $payarr[0];
+
+		if (0 == $flags)
+			return round($value, 0);
+
+
+		return self::pRound($value, $pclass['country']);
+	}
 
     /**
      * Returns the lowest monthly payment for Billmate Account.
@@ -369,20 +569,20 @@ class BillmateCalc {
      */
     public static function get_lowest_payment_for_account($country) {
         switch ($country) {
-            case 209:
+            case 'se':
                 $lowest_monthly_payment = 50.0000;
                 break;
-            case 164:
+            case 'no':
                 $lowest_monthly_payment = 95.0000;
                 break;
-            case 73:
+            case 'fi':
                 $lowest_monthly_payment = 8.9500;
                 break;
-            case 59:
+            case 'dk':
                 $lowest_monthly_payment = 89.0000;
                 break;
-            case 81:
-            case 154:
+            case 'de':
+            case 'nl':
                 $lowest_monthly_payment = 6.9500;
                 break;
             default:
@@ -391,5 +591,19 @@ class BillmateCalc {
 
         return $lowest_monthly_payment;
     }
+	public static function pRound($value, $country)
+	{
+		$multiply = 1;
+		switch ($country)
+		{
+			case BillmateCountry::FI:
+			case BillmateCountry::DE:
+			case BillmateCountry::NL:
+				$multiply = 10;
+				break;
+		}
+
+		return floor(($value * $multiply) + 0.5) / $multiply;
+	}
 
 } // end BillmateCalc
