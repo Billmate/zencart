@@ -28,6 +28,6 @@
  *
  */
 
-  define('MODULE_BILLMATE_NL_FEE_TITLE', 'Administratiekost');
-  define('MODULE_BILLMATE_NL_FEE_DESCRIPTION', 'Billmate - Invoice fee (NL)');
+  define('MODULE_BILLMATE_NOR_FEE_TITLE', 'Fakturagebyr');
+  define('MODULE_BILLMATE_NOR_FEE_DESCRIPTION', 'Billmate - Invoice fee (NO)');
 

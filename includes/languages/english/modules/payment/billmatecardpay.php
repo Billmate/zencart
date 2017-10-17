@@ -1,6 +1,6 @@
 <?php
 /**
- *  Copyright 2010 BILLMATECARDPAY AB. All rights reserved.
+ *  Copyright 2015 Billmate AB. All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without modification, are
  *  permitted provided that the following conditions are met:
@@ -12,7 +12,7 @@
  *        of conditions and the following disclaimer in the documentation and/or other materials
  *        provided with the distribution.
  *
- *  THIS SOFTWARE IS PROVIDED BY BILLMATECARDPAY AB "AS IS" AND ANY EXPRESS OR IMPLIED
+ *  THIS SOFTWARE IS PROVIDED BY BILLMATE AB "AS IS" AND ANY EXPRESS OR IMPLIED
  *  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
  *  FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL BILLMATECARDPAY AB OR
  *  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
@@ -24,14 +24,14 @@
  *
  *  The views and conclusions contained in the software and documentation are those of the
  *  authors and should not be interpreted as representing official policies, either expressed
- *  or implied, of BILLMATECARDPAY AB.
+ *  or implied, of Billmate AB.
  *
  */
 
   // Translations in installer
   define('MODULE_PAYMENT_BILLMATECARDPAY_ALLOWED_TITLE', 'Leave this blank!');
   define('MODULE_PAYMENT_BILLMATECARDPAY_ALLOWED_DESC', '');
-  define('MODULE_PAYMENT_BILLMATECARDPAY_STATUS_TITLE', 'Enable Billmate Cardpay module');
+  define('MODULE_PAYMENT_BILLMATECARDPAY_STATUS_TITLE', 'Enable Billmate Card module');
   define('MODULE_PAYMENT_BILLMATECARDPAY_STATUS_DESC', 'Do you want to accept Billmate Cardpay payments?');
   define('MODULE_PAYMENT_BILLMATECARDPAY_ORDER_STATUS_ID_TITLE', 'Set Order Status');
   define('MODULE_PAYMENT_BILLMATECARDPAY_ORDER_STATUS_ID_DESC', 'Set the status of orders made with this payment module to this value');
@@ -53,11 +53,17 @@
   define('MODULE_PAYMENT_BILLMATECARDPAY_SORT_ORDER_DESC', 'Sort order of display. Lowest is displayed first.');
   define('MODULE_PAYMENT_BILLMATECARDPAY_LIVEMODE_TITLE', 'Live Server');
   define('MODULE_PAYMENT_BILLMATECARDPAY_LIVEMODE_DESC', 'Do you want to use Billmate Cardpay LIVE server (true) or BETA server (false)?');
-  define('MODULE_PAYMENT_BILLMATECARDPAY_TESTMODE_TITLE', 'Testmode');
+  define('MODULE_PAYMENT_BILLMATECARDPAY_TESTMODE_TITLE', '(Testmode)');
   define('MODULE_PAYMENT_BILLMATECARDPAY_TESTMODE_DESC', 'Do you want to activate the Testmode? We will not pay for the invoices created with the test persons nor companies and we will not collect any fees as well.');
+	define('MODULE_PAYMENT_BILLMATECARDPAY_VAT','Moms');
 
-  define('MODULE_PAYMENT_BILLMATECARDPAY_TEXT_TITLE', 'Billmate Cardpay');
+  define('MODULE_PAYMENT_BILLMATECARDPAY_TEXT_TITLE', 'Billmate Card');
+  define('MODULE_PAYMENT_BILLMATECARDPAY_FRONTEND_TEXT_TITLE', 'Billmate Card');
   define('MODULE_PAYMENT_BILLMATECARDPAY_LANG_TESTMODE', '(TESTMODE)');
-  define('MODULE_PAYMENT_BILLMATECARDPAY_TEXT_DESCRIPTION', 'Credit Card Purchase from Billmate Cardpay');
+  define('MODULE_PAYMENT_BILLMATECARDPAY_TEXT_DESCRIPTION', 'Credit Card Purchase from Billmate Card');
   define('MODULE_PAYMENT_BILLMATECARDPAY_TEXT_CONFIRM_DESCRIPTION', 'www.billmate.se');
-  
+  define('MODULE_PAYMENT_BILLMATECARDPAY_CANCEL', 'The card payment has been canceled before it was processed. Please try again or choose a different payment method.');
+  define('MODULE_PAYMENT_BILLMATECARDPAY_FAILED', 'Unfortunately your card payment was not processed with the provided card details. Please try again or choose another payment method.');
+
+
+

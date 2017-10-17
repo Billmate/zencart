@@ -25,11 +25,15 @@
   define('MODULE_PAYMENT_BILLMATEBANK_SORT_ORDER_DESC', 'Sort order of display. Lowest is displayed first.');
   define('MODULE_PAYMENT_BILLMATEBANK_LIVEMODE_TITLE', 'Live Server');
   define('MODULE_PAYMENT_BILLMATEBANK_LIVEMODE_DESC', 'Do you want to use Billmate Bank LIVE server (true) or BETA server (false)?');
-  define('MODULE_PAYMENT_BILLMATEBANK_TESTMODE_TITLE', 'Testmode');
+  define('MODULE_PAYMENT_BILLMATEBANK_TESTMODE_TITLE', '(Testmode)');
   define('MODULE_PAYMENT_BILLMATEBANK_TESTMODE_DESC', 'Do you want to activate the Testmode? We will not pay for the invoices created with the test persons nor companies and we will not collect any fees as well.');
+	define('MODULE_PAYMENT_BILLMATEBANK_VAT','VAT');
 
   define('MODULE_PAYMENT_BILLMATEBANK_TEXT_TITLE', 'Billmate Bank');
+  define('MODULE_PAYMENT_BILLMATEBANK_FRONTEND_TEXT_TITLE', 'Billmate Bank');
   define('MODULE_PAYMENT_BILLMATEBANK_LANG_TESTMODE', '(TESTMODE)');
   define('MODULE_PAYMENT_BILLMATEBANK_TEXT_DESCRIPTION', 'Purchase from Billmate Bank');
   define('MODULE_PAYMENT_BILLMATEBANK_TEXT_CONFIRM_DESCRIPTION', 'www.billmate.se');
-  
+  define('MODULE_PAYMENT_BILLMATEBANK_CANCEL', 'The bank payment has been canceled before it was processed. Please try again or choose a different payment method.');
+  define('MODULE_PAYMENT_BILLMATEBANK_FAILED', 'Unfortunately your bank payment was not processed with the provided bank details. Please try again or choose another payment method.');
+

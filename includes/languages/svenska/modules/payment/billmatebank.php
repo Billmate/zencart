@@ -37,3 +37,4 @@ define('MODULE_PAYMENT_BILLMATEBANK_VAT','Moms');
 define('MODULE_PAYMENT_BILLMATEBANK_CANCEL', 'Bankbetalningen avbröts innan det fullföljdes. Var vänlig prova igen eller välj ett annat betalalternativ.');
 define('MODULE_PAYMENT_BILLMATEBANK_FAILED', 'Dessvärre gick det inte att genomföra köpet med de uppgifter ni tillhandahållit. Var vänlig försök igen eller välj ett annat betalsätt.');
 
+

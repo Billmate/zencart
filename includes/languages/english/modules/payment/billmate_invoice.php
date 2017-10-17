@@ -1,6 +1,6 @@
 <?php
 /**
- *  Copyright 2010 BILLMATE AB. All rights reserved.
+ *  Copyright 2015 Billmate AB. All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without modification, are
  *  permitted provided that the following conditions are met:
@@ -24,43 +24,45 @@
  *
  *  The views and conclusions contained in the software and documentation are those of the
  *  authors and should not be interpreted as representing official policies, either expressed
- *  or implied, of BILLMATE AB.
+ *  or implied, of Billmate AB.
  *
  */
 
   // Translations in installer
   define('MODULE_PAYMENT_BILLMATE_ALLOWED_TITLE', 'Leave this blank!');
   define('MODULE_PAYMENT_BILLMATE_ALLOWED_DESC', '');
-  define('MODULE_PAYMENT_BILLMATE_STATUS_TITLE', 'Enable Billmate module');
+  define('MODULE_PAYMENT_BILLMATE_STATUS_TITLE', 'Enable Billmate Invoice Module');
   define('MODULE_PAYMENT_BILLMATE_STATUS_DESC', 'Do you want to accept Billmate payments?');
-  define('MODULE_PAYMENT_BILLMATE_ORDER_STATUS_ID_TITLE', 'Set Order Status');
-  define('MODULE_PAYMENT_BILLMATE_ORDER_STATUS_ID_DESC', 'Set the status of orders made with this payment module to this value');
+  define('MODULE_PAYMENT_BILLMATE_ORDER_STATUS_ID_TITLE', 'Approved Payments Order Status');
+  define('MODULE_PAYMENT_BILLMATE_ORDER_STATUS_ID_DESC', 'Set the order status of approved payments.');
   define('MODULE_PAYMENT_BILLMATE_EID_TITLE', 'Merchant ID');
-  define('MODULE_PAYMENT_BILLMATE_EID_DESC', 'Merchant ID (estore id) to use for the Billmate service (provided by Billmate)');
+  define('MODULE_PAYMENT_BILLMATE_EID_DESC', 'Merchant ID to use for the Billmate service (provided by Billmate)');
   define('MODULE_PAYMENT_BILLMATE_SECRET_TITLE', 'Shared secret');
   define('MODULE_PAYMENT_BILLMATE_SECRET_DESC', 'Shared secret to use with the Billmate service (provided by Billmate)');
   define('MODULE_PAYMENT_BILLMATE_ARTNO_TITLE', 'Product artno attribute (id or model)');
   define('MODULE_PAYMENT_BILLMATE_ARTNO_DESC', 'Use the following product attribute for ArtNo.');
-  define('MODULE_PAYMENT_BILLMATE_PERSON_NUMBER','Personal Number');
-  define('MODULE_PAYMENT_BILLMATE_EMAIL','My email %s is accurate and can be used for billing');
-  define('MODULE_PAYMENT_BILLMATE_ADDR_TITLE','Note');
-  define('MODULE_PAYMENT_BILLMATE_CONDITIONS','<a id="terms" href="javascript:;">Terms and conditions</a> 
-  	  <script>
-		if (typeof jQuery == \'undefined\') {
-			var script = document.createElement(\'script\');
-			script.type = "text/javascript";
-			script.src = "http://code.jquery.com/jquery-1.9.1.js";
-			document.getElementsByTagName(\'head\')[0].appendChild(script);
-		}
-	  </script>
-		<script type="text/javascript">
-			jQuery(function(){
-			  $.getScript("https://efinance.se/billmate/base.js", function(){
-				$("#terms").Terms("villkor",{invoicefee: 0});
-			  });
-			});
-		</script>');
-  define('MODULE_PAYMENT_BILLMATE_ADDR_NOTICE','Your billing and shipping address will be automatically updated to your registered address.');
+  define('MODULE_PAYMENT_BILLMATE_PERSON_NUMBER','Social Security Number / Corporate Registration Number:');
+  define('MODULE_PAYMENT_BILLMATE_EMAIL','My email is accurate and can be used for invoicing.<br/>I also confirm the <a style="text-decoration: underline !important;" id="terms" href="javascript:;">terms and conditions</a> and accept the liability.
+    <script>
+    if (!window.jQuery) {
+      var script = document.createElement(\'script\');
+      script.type = "text/javascript";
+      script.src = "http://code.jquery.com/jquery-1.9.1.js";
+      document.getElementsByTagName(\'head\')[0].appendChild(script);
+    }
+    </script>
+    <script type="text/javascript">
+      setTimeout(function(){
+        jQuery(function(){
+          $.getScript("https://billmate.se/billmate/base.js", function(){
+            $("#terms").Terms("villkor",{invoicefee: 0});
+          });
+        });
+      },1000);
+    </script>');
+  define('MODULE_PAYMENT_BILLMATE_ADDR_TITLE','<br/>Note: Your billing and shipping address will<br/>automatically be updated to your registered address.');
+  define('MODULE_PAYMENT_BILLMATE_CONDITIONS','');
+  define('MODULE_PAYMENT_BILLMATE_ADDR_NOTICE','');
   define('MODULE_PAYMENT_BILLMATE_ORDER_LIMIT_TITLE', 'Credit limit');
   define('MODULE_PAYMENT_BILLMATE_ORDER_LIMIT_DESC', 'Only show this payment alternative for orders less than the value below.');
   define('MODULE_PAYMENT_BILLMATE_ORDER_TOTAL_IGNORE_TITLE', 'Ignore table');
@@ -73,18 +75,21 @@
   define('MODULE_PAYMENT_BILLMATE_SORT_ORDER_DESC', 'Sort order of display. Lowest is displayed first.');
   define('MODULE_PAYMENT_BILLMATE_LIVEMODE_TITLE', 'Live Server');
   define('MODULE_PAYMENT_BILLMATE_LIVEMODE_DESC', 'Do you want to use Billmate LIVE server (true) or BETA server (false)?');
-  define('MODULE_PAYMENT_BILLMATE_TESTMODE_TITLE', 'Testmode');
-  define('MODULE_PAYMENT_BILLMATE_TESTMODE_DESC', 'Do you want to activate the Testmode? We will not pay for the invoices created with the test persons nor companies and we will not collect any fees as well.');
+  define('MODULE_PAYMENT_BILLMATE_TEXT_TESTMODE_TITLE', '(TESTMODE)');
+  define('MODULE_PAYMENT_BILLMATE_TEXT_TESTMODE_DESC', 'Do you want to activate the Testmode? We will not pay for the invoices created with the test persons nor companies and we will not collect any fees as well.');
 
-  define('MODULE_PAYMENT_BILLMATE_TEXT_TITLE', 'Billmate - Invoice 14 days after delivery');
-  define('MODULE_PAYMENT_BILLMATE_TEXT_DESCRIPTION', 'invoice from Billmate');
+  define('MODULE_PAYMENT_BILLMATE_TEXT_TITLE', 'Invoice');
+  define('MODULE_PAYMENT_BILLMATE_FRONTEND_TEXT_TITLE', 'Invoice');
+  define('MODULE_PAYMENT_BILLMATE_TEXT_DESCRIPTION', 'Invoice Payment method, by Billmate');
   define('MODULE_PAYMENT_BILLMATE_TEXT_CONFIRM_DESCRIPTION', 'www.billmate.se');
-  
-define('MODULE_PAYMENT_BILLMATE_ADDRESS_WRONG', 'Your Billing address is wrong.');
-define('MODULE_PAYMENT_BILLMATE_CORRECT_ADDRESS', 'Correct Address is :');
-define('MODULE_PAYMENT_BILLMATE_CORRECT_ADDRESS_OPTION', 'Click Yes to continue with new address, No to choose other payment method');
-define('MODULE_PAYMENT_BILLMATE_YES', 'Yes');
-define('MODULE_PAYMENT_BILLMATE_NO', 'No');
-define('MODULE_PAYMENT_BILLMATE_CHOOSEALTERNATIVES', 'Choose alternative address below');
-define('MODULE_PAYMENT_BILLMATE_ERRORINVOICE', 'Billmate - Failed');
+  define('MODULE_PAYMENT_BILLMATE_EXTRA_FEE',' - %s invoice fee is added to the order.');
+
+define('MODULE_PAYMENT_BILLMATE_ADDRESS_WRONG', 'Pay with invoice can only be made with a registered adress. Would you like to make the purchase with the following registered address:');
+  define('MODULE_PAYMENT_BILLMATE_CORRECT_ADDRESS', 'Correct Address is :');
+  define('MODULE_PAYMENT_BILLMATE_CORRECT_ADDRESS_OPTION', 'Click Yes to continue with new address, No to choose other payment method');
+  define('MODULE_PAYMENT_BILLMATE_YES', 'Yes, make purchase with this address.');
+  define('MODULE_PAYMENT_BILLMATE_NO', 'No, I want to specify another person / company or change payment method.');
+  define('MODULE_PAYMENT_BILLMATE_VAT','VAT');
+  define('MODULE_PAYMENT_BILLMATE_CHOOSEALTERNATIVES', 'Choose alternative address below');
+  define('MODULE_PAYMENT_BILLMATE_ERRORINVOICE', 'Billmate - Failed');
 
