@@ -309,9 +309,9 @@ class billmate_invoice {
                 array('title' => "<link rel='stylesheet' href='".HTTP_SERVER.DIR_WS_HTTP_CATALOG."/billmatestyle.css'/>",
                         'field' => $popup),				
                 array('title' => MODULE_PAYMENT_BILLMATE_PERSON_NUMBER,
-                        'field' => tep_draw_input_field('billmate_pnum',
+                        'field' => zen_draw_input_field('billmate_pnum',
                         $billmate_pnum)),
-                array('title' =>tep_draw_checkbox_field('billmate_email',
+                array('title' =>zen_draw_checkbox_field('billmate_email',
                     $order->customer['email_address'],true).sprintf(MODULE_PAYMENT_BILLMATE_EMAIL , $order->customer['email_address']),
                         'field' =>  '')
         );
@@ -562,7 +562,7 @@ class billmate_invoice {
                     } else {
                         if ($GLOBALS[$class]->enabled) {
                             for ($i=0, $n=sizeof($GLOBALS[$class]->output); $i<$n; $i++) {
-                                if (tep_not_null($GLOBALS[$class]->output[$i]['title']) && tep_not_null($GLOBALS[$class]->output[$i]['text'])) {
+                                if (zen_not_null($GLOBALS[$class]->output[$i]['title']) && zen_not_null($GLOBALS[$class]->output[$i]['text'])) {
                                     $order_totals[] = array('code' => $GLOBALS[$class]->code,
                                         'title' => $GLOBALS[$class]->output[$i]['title'],
                                         'text' => $GLOBALS[$class]->output[$i]['text'],
@@ -615,9 +615,9 @@ class billmate_invoice {
                 'currency' => $order->info['currency'],
                 'currency_value' => $order->info['currency_value']);
 
-            tep_db_perform(TABLE_ORDERS, $sql_data_array);
+            $db->perform(TABLE_ORDERS, $sql_data_array);
 
-            $insert_id = tep_db_insert_id();
+            $insert_id = $db->InsertId();;
 
             for ($i=0, $n=sizeof($order_totals); $i<$n; $i++) {
                 $sql_data_array = array('orders_id' => $insert_id,
@@ -627,7 +627,7 @@ class billmate_invoice {
                     'class' => $order_totals[$i]['code'],
                     'sort_order' => $order_totals[$i]['sort_order']);
 
-                tep_db_perform(TABLE_ORDERS_TOTAL, $sql_data_array);
+                $db->perform(TABLE_ORDERS_TOTAL, $sql_data_array);
             }
 
             $customer_notification = (SEND_EMAILS == 'true') ? '1' : '0';
@@ -636,11 +636,11 @@ class billmate_invoice {
                 'date_added' => 'now()',
                 'customer_notified' => 0,
                 'comments' => $order->info['comments']);
-            tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+            $db->perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
 
             for ($i=0, $n=sizeof($order->products); $i<$n; $i++) {
                 $sql_data_array = array('orders_id' => $insert_id,
-                    'products_id' => tep_get_prid($order->products[$i]['id']),
+                    'products_id' => zen_get_prid($order->products[$i]['id']),
                     'products_model' => $order->products[$i]['model'],
                     'products_name' => $order->products[$i]['name'],
                     'products_price' => $order->products[$i]['price'],
@@ -648,9 +648,9 @@ class billmate_invoice {
                     'products_tax' => $order->products[$i]['tax'],
                     'products_quantity' => $order->products[$i]['qty']);
 
-                tep_db_perform(TABLE_ORDERS_PRODUCTS, $sql_data_array);
+                $db->perform(TABLE_ORDERS_PRODUCTS, $sql_data_array);
 
-                $order_products_id = tep_db_insert_id();
+                $order_products_id = $db->InsertId();
 
                 $attributes_exist = '0';
                 if (isset($order->products[$i]['attributes'])) {
@@ -710,15 +710,15 @@ class billmate_invoice {
         $process_button_string = '';
         $checked = true;
 		$process_button_string .=
-		tep_draw_hidden_field('addr_num', $counter, $checked, '').
-		tep_draw_hidden_field('billmate_pnum'.$counter,  $this->billmate_pnum).
-		tep_draw_hidden_field('billmate_company'.$counter,  convertToUTF8($order->billing['company'])).
-		tep_draw_hidden_field('billmate_fname'.$counter, convertToUTF8($order->billing['firstname'])).
-		tep_draw_hidden_field('billmate_lname'.$counter, convertToUTF8($order->billing['lastname'])).
-		tep_draw_hidden_field('billmate_street'.$counter, convertToUTF8($order->billing['street_address'])).
-		tep_draw_hidden_field('billmate_postno'.$counter, convertToUTF8($order->billing['postcode'])).
-		tep_draw_hidden_field('billmate_city'.$counter, convertToUTF8($order->billing['city'])).
-		tep_draw_hidden_field('billmate_country'.$counter,  convertToUTF8($this->addrs->country));
+		zen_draw_hidden_field('addr_num', $counter, $checked, '').
+		zen_draw_hidden_field('billmate_pnum'.$counter,  $this->billmate_pnum).
+		zen_draw_hidden_field('billmate_company'.$counter,  convertToUTF8($order->billing['company'])).
+		zen_draw_hidden_field('billmate_fname'.$counter, convertToUTF8($order->billing['firstname'])).
+		zen_draw_hidden_field('billmate_lname'.$counter, convertToUTF8($order->billing['lastname'])).
+		zen_draw_hidden_field('billmate_street'.$counter, convertToUTF8($order->billing['street_address'])).
+		zen_draw_hidden_field('billmate_postno'.$counter, convertToUTF8($order->billing['postcode'])).
+		zen_draw_hidden_field('billmate_city'.$counter, convertToUTF8($order->billing['city'])).
+		zen_draw_hidden_field('billmate_country'.$counter,  convertToUTF8($this->addrs->country));
 
         $order_totals = $order_total_modules->modules;
         $languages = $db->Execute("select code from " . TABLE_LANGUAGES . " where languages_id = '{$languages_id}'");
@@ -1127,7 +1127,7 @@ class billmate_invoice {
                                 ON p.products_id=pa.products_id
                                 LEFT JOIN " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad
                                 ON pa.products_attributes_id=pad.products_attributes_id
-                                WHERE p.products_id = '" . tep_get_prid($order->products[$i]['id']) . "'";
+                                WHERE p.products_id = '" . zen_get_prid($order->products[$i]['id']) . "'";
 // Will work with only one option for downloadable products
 // otherwise, we have to build the query dynamically with a loop
                     $products_attributes = $order->products[$i]['attributes'];
@@ -1251,10 +1251,9 @@ class billmate_invoice {
             $q = "select countries_id from " . TABLE_COUNTRIES .
                 " where countries_iso_code_2 = 'SE'";
 
-            $check_country_query = tep_db_query($q);
-            $check_country = tep_db_fetch_array($check_country_query);
+            $check_country = $db->perform($q);
 
-            $cid = $check_country['countries_id'];
+            $cid = $check_country->fields['countries_id'];
 
             $q = "select address_book_id from " . TABLE_ADDRESS_BOOK .
                 " where customers_id = '" . (int)$customer_id .
@@ -1326,7 +1325,7 @@ class billmate_invoice {
 
             zen_session_unregister('cart_billmate_card_ID');
 
-            zen_redirect(tep_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL'));
+            zen_redirect(zen_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL'));
 
             return false;
         }
@@ -1406,16 +1405,16 @@ class billmate_invoice {
 
     function install() {
         global $db;
-        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Enable Billmate Module', 'MODULE_PAYMENT_BILLMATE_STATUS', 'True', 'Do you want to accept Billmate payments?', '6', '0', 'tep_cfg_select_option(array(\'True\', \'False\'), ', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Enable Billmate Module', 'MODULE_PAYMENT_BILLMATE_STATUS', 'True', 'Do you want to accept Billmate payments?', '6', '0', 'zen_cfg_select_option(array(\'True\', \'False\'), ', now())");
 
-        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, use_function, set_function, date_added) values ('Payment Zone', 'MODULE_PAYMENT_BILLMATE_ZONE', '0', 'If a zone is selected, only enable this payment method for that zone.', '6', '2', 'tep_get_zone_class_title', 'tep_cfg_pull_down_zone_classes(', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, use_function, set_function, date_added) values ('Payment Zone', 'MODULE_PAYMENT_BILLMATE_ZONE', '0', 'If a zone is selected, only enable this payment method for that zone.', '6', '2', 'zen_get_zone_class_title', 'zen_cfg_pull_down_zone_classes(', now())");
 
         $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Merchant ID', 'MODULE_PAYMENT_BILLMATE_EID', '0', 'Merchant ID (estore id) to use for the Billmate service (provided by Billmate)', '6', '0', now())");
 
         $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Shared secret', 'MODULE_PAYMENT_BILLMATE_SECRET', '', 'Shared secret to use with the Billmate service (provided by Billmate)', '6', '0', now())");
 
 
-        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Product artno attribute (id or model)', 'MODULE_PAYMENT_BILLMATE_ARTNO', 'id', 'Use the following product attribute for ArtNo.', '6', '2', 'tep_cfg_select_option(array(\'id\', \'model\'),', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Product artno attribute (id or model)', 'MODULE_PAYMENT_BILLMATE_ARTNO', 'id', 'Use the following product attribute for ArtNo.', '6', '2', 'zen_cfg_select_option(array(\'id\', \'model\'),', now())");
 
         $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Ignore table', 'MODULE_PAYMENT_BILLMATE_ORDER_TOTAL_IGNORE', 'ot_tax,ot_total,ot_subtotal', 'Ignore these entries from order total list when compiling the invoice data', '6', '2', now())");
 
@@ -1424,9 +1423,9 @@ class billmate_invoice {
 
         $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Sort order of display.', 'MODULE_PAYMENT_BILLMATE_SORT_ORDER', '0', 'Sort order of display. Lowest is displayed first.', '6', '0', now())");
 
-        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added) values ('Set Order Status', 'MODULE_PAYMENT_BILLMATE_ORDER_STATUS_ID', '0', 'Set the status of orders made with this payment module to this value', '6', '0', 'tep_cfg_pull_down_order_statuses(', 'tep_get_order_status_name', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added) values ('Set Order Status', 'MODULE_PAYMENT_BILLMATE_ORDER_STATUS_ID', '0', 'Set the status of orders made with this payment module to this value', '6', '0', 'zen_cfg_pull_down_order_statuses(', 'zen_get_order_status_name', now())");
 
-        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Testmode', 'MODULE_PAYMENT_BILLMATE_TESTMODE', 'False', 'Do you want to activate the Testmode? We will not pay for the invoices created with the test persons nor companies and we will not collect any fees as well.', '6', '0', 'tep_cfg_select_option(array(\'True\', \'False\'), ', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Testmode', 'MODULE_PAYMENT_BILLMATE_TESTMODE', 'False', 'Do you want to activate the Testmode? We will not pay for the invoices created with the test persons nor companies and we will not collect any fees as well.', '6', '0', 'zen_cfg_select_option(array(\'True\', \'False\'), ', now())");
 
         $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Countries', 'MODULE_PAYMENT_BILLMATE_ENABLED_COUNTRYIES', 'se,fi,dk,no', 'Available in selected countries<br/>se = Sweden<br/>fi = Finland<br/>dk = Denmark<br/>no = Norway', '6', '0', now())");
 

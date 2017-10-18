@@ -19,7 +19,6 @@ if(!function_exists('getCountryID')){
 	define('BILLPLUGIN_VERSION','2.1');
 	$version = function_exists('zen_get_version') ? zen_get_version() : 'to_old';
 	defined('BILLMATE_CLIENT') || define('BILLMATE_CLIENT',  'PHP:ZenCart:'.$version.':PLUGIN:'.BILLPLUGIN_VERSION );
-	//define('SHOP_VERSION',array('oscVersion' => function_exists('tep_get_version') ? tep_get_version() : 'to_old'));
 	function getCountryID(){
 		return 209;
 		$country = strtoupper(shopp_setting('base_operations'));
