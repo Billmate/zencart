@@ -77,7 +77,7 @@ class BillmateUtils {
      *
      */
     public static function get_display_jQuery($code) {
-        return "<script type=\"text/javascript\" src='".HTTP_SERVER.DIR_WS_HTTP_CATALOG."billmatepopup.js'></script><script type='text/javascript'>
+        return "<script type=\"text/javascript\" src='".HTTP_SERVER."/billmatepopup.js'></script><script type='text/javascript'>
                 if(typeof jQuery != 'undefined')
                 jQuery(document).ready(function() {
                     var input = jQuery('input[value=\"".$code."\"][name=\"payment\"]');

@@ -253,7 +253,7 @@ class pcbillmate {
 			$total += $order->info['shipping_cost'] * ($shipp[0]['tax']/100);
 	    }
         //Get and calculate monthly costs for all pclasses
-        $languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
+        $languageCode = $db->Execute("select code from languages where languages_id = " . $_SESSION['languages_id']);
         $langCode = '';
         if(!in_array($languageCode->fields['code'],array('sv','en','se')))
             $langCode = 'en';
@@ -289,7 +289,7 @@ class pcbillmate {
 
 
         $fields=array(
-                array('title' => '<img src="'.HTTP_SERVER.DIR_WS_HTTP_CATALOG.'/images/billmate/'.$languageCode['code'].'/partpayment.png" />',
+                array('title' => '<img src="'.HTTP_SERVER.'/'.DIR_WS_IMAGES.'/billmate/'.$languageCode['code'].'/partpayment.png" />',
                         'field' => '<script type="text/javascript">
                           if(!window.jQuery){
 	                          var jq = document.createElement("script");
@@ -463,7 +463,7 @@ class pcbillmate {
     margin:0px!important;
 }
 	            </style>
-	            <script type="text/javascript" src="'.HTTP_SERVER.DIR_WS_HTTP_CATALOG.'billmatepopup.js"></script>
+	            <script type="text/javascript" src="'.HTTP_SERVER.'/billmatepopup.js"></script>
 	            <script type="text/javascript">
 	            function updateAddresspart(){
     	            jQuery(":input[name=pcbillmate_pnum]").after("<input type=\'hidden\' name=\'geturl\' value=\'true\'/>");

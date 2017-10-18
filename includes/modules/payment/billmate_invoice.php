@@ -297,7 +297,7 @@ class billmate_invoice {
             $languageCode->MoveNext();
         }
         $fields=array(
-                array('title' => '<img src="'.HTTP_SERVER.DIR_WS_HTTP_CATALOG.'/images/billmate/'.$langCode.'/invoice.png" />',
+                array('title' => '<img src="'.HTTP_SERVER.'/'.DIR_WS_IMAGES.'/billmate/'.$langCode.'/invoice.png" />',
                         'field' => '<script type="text/javascript">
                           if(!window.jQuery){
 	                          var jq = document.createElement("script");
@@ -462,7 +462,7 @@ class billmate_invoice {
     margin:0px!important;
 }
 	            </style>
-	            <script type="text/javascript" src="'.HTTP_SERVER.DIR_WS_HTTP_CATALOG.'billmatepopup.js"></script>
+	            <script type="text/javascript" src="'.HTTP_SERVER.'/billmatepopup.js"></script>
 	            <script type="text/javascript">
 	            function updateAddress(){
     	            jQuery(":input[name=billmate_pnum]").after("<input type=\'hidden\' name=\'geturl\' value=\'true\'/>");

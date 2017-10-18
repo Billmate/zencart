@@ -56,10 +56,9 @@ class billmatebank {
 
 	    if (!in_array(strtoupper($_SESSION['currency']),$currencyValid)) {
 		    $this->enabled = false;
-	    }
-	    else {
+	    } else {
 		    if(is_array($_SESSION['billing'])) {
-			    if(!in_array(strtolower($_SESSION['billing']['country']['iso_code_2']),$disabled_countries)) {
+			    if(in_array(strtolower($_SESSION['billing']['country']['iso_code_2']),$disabled_countries)) {
 				    $this->enabled = false;
 			    }
 		    }
@@ -68,7 +67,7 @@ class billmatebank {
 
 
 			    if(!$result->EOF) {
-				    if(!in_array(strtolower($result->fields['countries_iso_code_2']),$countryValid)) {
+				    if(in_array(strtolower($result->fields['countries_iso_code_2']),$countryValid)) {
 					    $this->enabled = false;
 				    }
 				    $this->enabled = $this->enabled && !in_array(strtolower($result->fields['countries_iso_code_2']),$disabled_countries);
@@ -78,6 +77,7 @@ class billmatebank {
 			    }
 		    }
 	    }
+
 
 
         if(is_object($currencies)) {
@@ -167,13 +167,13 @@ class billmatebank {
         $js = ($this->jQuery) ? BillmateUtils::get_display_jQuery($this->code) : "";
         $popup = '';
 
-        $languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
+        $languageCode = $db->Execute("select code from languages where languages_id = " . $_SESSION['languages_id']);
 	    $langCode = '';
         if(!in_array($languageCode->fields['code'],array('sv','en','se')))
             $langCode = 'en';
         $langCode = $languageCode->fields['code'] == 'se' ? 'sv' : $languageCode->fields['code'];
 
-        $fields[] = array('title' => '<img src="'.HTTP_SERVER.DIR_WS_HTTP_CATALOG.'/images/billmate/'.$langCode.'/bankpay.png" />', 'field' => '<script type="text/javascript">
+        $fields[] = array('title' => '<img src="'.HTTP_SERVER.'/'.DIR_WS_IMAGES.'/billmate/'.$langCode.'/bankpay.png" />', 'field' => '<script type="text/javascript">
                           if(!window.jQuery){
                           	var jq = document.createElement("script");
                           	jq.type = "text/javascript";
