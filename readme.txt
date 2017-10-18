@@ -4,9 +4,9 @@
                                              
 === ZENCART BILLMATE GATEWAY ===
 
-By eFinance Nordic AB - http://efinance.se/
+By Billmate AB - http://billmate.se/
 
-Documentation with instructions on how to setup the plugin can be found at https://efinance.se/plugins/zencart/Instruktionsmanual_Zencart_Billmate_Plugin.pdf
+Documentation with instructions on how to setup the plugin can be found at https://billmate.se/plugins/zencart/Instruktionsmanual_Zencart_Billmate_Plugin.pdf
 
 
 == DESCRIPTION ==

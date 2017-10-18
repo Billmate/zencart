@@ -103,7 +103,7 @@ define('MODULE_PAYMENT_PCBILLMATE_NO', 'No, I want to specify another person / c
       setTimeout(function(){
       var eid = "%s";
         jQuery(function(){
-          $.getScript("https://efinance.se/billmate/base.js", function(){
+          $.getScript("https://billmate.se/billmate/base.js", function(){
           $("#terms-delbetalning").Terms("villkor_delbetalning",{eid: eid,effectiverate:34});
           });
         });
