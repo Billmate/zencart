@@ -57,7 +57,7 @@ function billmate_remove_order($order_id, $restock = false) {
         
         $order = $db->Execute("select products_id, products_quantity from " . TABLE_ORDERS_PRODUCTS . " where orders_id = '" . (int)$order_id . "'");
         while (!$order->EOF) {
-            $db->Execute("update " . TABLE_PRODUCTS . " set products_quantity = products_quantity + " . $order['products_quantity'] . ", products_ordered = products_ordered - " . $order['products_quantity'] . " where products_id = '" . (int)$order['products_id'] . "'");
+            $db->Execute("update " . TABLE_PRODUCTS . " set products_quantity = products_quantity + " . $order->fields['products_quantity'] . ", products_ordered = products_ordered - " . $order->fields['products_quantity'] . " where products_id = '" . (int)$order->fields['products_id'] . "'");
             $order->MoveNext();
         }
     }
@@ -301,7 +301,7 @@ class BillmateUtils {
                 $query = $db->Execute("SELECT * FROM `".$table."`");
             $tmp = array();
             while(!$query->EOF) {
-                $tmp[] = $query;
+                $tmp[] = $query->fields;
                 $query->MoveNext();
             }
             return $tmp;
@@ -338,7 +338,7 @@ class BillmateUtils {
         $table_columns = array();
         $row = $db->Execute("select column_name from information_schema.columns where table_name='".$table."'");
         while (!$row->EOF) {
-            $table_columns[] = $row['column_name'];
+            $table_columns[] = $row->fields['column_name'];
             $row->MoveNext();
         }
         if(!in_array("language", $table_columns)) {

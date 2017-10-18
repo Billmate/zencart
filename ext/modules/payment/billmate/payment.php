@@ -193,13 +193,13 @@ function partpay($order_id){
     $ssl = true;
     $debug = false;
     $languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
-    $languageCode['code']  = (strtolower($languageCode['code']) == 'se') ? 'sv' : $languageCode['code'];
+    $langCode  = (strtolower($languageCode->fields['code']) == 'se') ? 'sv' : $languageCode->fields['code'];
 
     $testmode = false;
     if ((MODULE_PAYMENT_PCBILLMATE_TESTMODE == 'True')) {
         $testmode = true;
     }
-    if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$languageCode['code']);
+    if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$langCode);
     if(!defined('BILLMATE_SERVER')) define('BILLMATE_SERVER','2.1.7');
     if(zen_session_is_registered('billmate_pno')){
         $pno = $billmate_pno;
@@ -480,9 +480,9 @@ function invoice($order_id){
     $debug = false;
     $testmode =
     $languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
-    $languageCode['code']  = (strtolower($languageCode['code']) == 'se') ? 'sv' : $languageCode['code'];
+    $langCode  = (strtolower($languageCode->fields['code']) == 'se') ? 'sv' : $languageCode->fields['code'];
 
-    if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$languageCode['code']);
+    if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$langCode);
     if(!defined('BILLMATE_SERVER')) define('BILLMATE_SERVER','2.1.7');
     if(zen_session_is_registered('billmate_pno')){
         $pno = $billmate_pno;
@@ -581,8 +581,8 @@ function getOrder($order_id){
 
     $totals_query = $db->Execute("select title, text from " . TABLE_ORDERS_TOTAL . " where orders_id = '" . (int)$order_id . "' order by sort_order");
     while (!$totals_query->EOF) {
-        $toReturn->totals[] = array('title' => $totals_query['title'],
-            'text' => $totals_query['text']);
+        $toReturn->totals[] = array('title' => $totals_query->fields['title'],
+            'text' => $totals_query->fields['text']);
         $totals_query->MoveNext();
     }
 
@@ -592,55 +592,55 @@ function getOrder($order_id){
 
     $order_status = $db->Execute("select orders_status_name from " . TABLE_ORDERS_STATUS . " where orders_status_id = '" . $order['orders_status'] . "' and language_id = '" . (int)$languages_id . "'");
 
-    $toReturn->info = array('currency' => $order['currency'],
-        'currency_value' => $order['currency_value'],
-        'payment_method' => $order['payment_method'],
-        'cc_type' => $order['cc_type'],
-        'cc_owner' => $order['cc_owner'],
-        'cc_number' => $order['cc_number'],
-        'cc_expires' => $order['cc_expires'],
-        'date_purchased' => $order['date_purchased'],
-        'orders_status' => $order_status['orders_status_name'],
-        'last_modified' => $order['last_modified'],
-        'total' => strip_tags($order_total['text']),
-        'shipping_method' => ((substr($shipping_method['title'], -1) == ':') ? substr(strip_tags($shipping_method['title']), 0, -1) : strip_tags($shipping_method['title'])));
+    $toReturn->info = array('currency' => $order->fields['currency'],
+        'currency_value' => $order->fields['currency_value'],
+        'payment_method' => $order->fields['payment_method'],
+        'cc_type' => $order->fields['cc_type'],
+        'cc_owner' => $order->fields['cc_owner'],
+        'cc_number' => $order->fields['cc_number'],
+        'cc_expires' => $order->fields['cc_expires'],
+        'date_purchased' => $order->fields['date_purchased'],
+        'orders_status' => $order_status->fields['orders_status_name'],
+        'last_modified' => $order->fields['last_modified'],
+        'total' => strip_tags($order_total->fields['text']),
+        'shipping_method' => ((substr($shipping_method->fields['title'], -1) == ':') ? substr(strip_tags($shipping_method->fields['title']), 0, -1) : strip_tags($shipping_method->fields['title'])));
 
-    $toReturn->customer = array('id' => $order['customers_id'],
-        'name' => $order['customers_name'],
-        'company' => $order['customers_company'],
-        'street_address' => $order['customers_street_address'],
-        'suburb' => $order['customers_suburb'],
-        'city' => $order['customers_city'],
-        'postcode' => $order['customers_postcode'],
-        'state' => $order['customers_state'],
-        'country' => array('title' => $order['customers_country']),
-        'format_id' => $order['customers_address_format_id'],
-        'telephone' => $order['customers_telephone'],
-        'email_address' => $order['customers_email_address']);
+    $toReturn->customer = array('id' => $order->fields['customers_id'],
+        'name' => $order->fields['customers_name'],
+        'company' => $order->fields['customers_company'],
+        'street_address' => $order->fields['customers_street_address'],
+        'suburb' => $order->fields['customers_suburb'],
+        'city' => $order->fields['customers_city'],
+        'postcode' => $order->fields['customers_postcode'],
+        'state' => $order->fields['customers_state'],
+        'country' => array('title' => $order->fields['customers_country']),
+        'format_id' => $order->fields['customers_address_format_id'],
+        'telephone' => $order->fields['customers_telephone'],
+        'email_address' => $order->fields['customers_email_address']);
 
-    $toReturn->delivery = array('name' => trim($order['delivery_name']),
-        'company' => $order['delivery_company'],
-        'street_address' => $order['delivery_street_address'],
-        'suburb' => $order['delivery_suburb'],
-        'city' => $order['delivery_city'],
-        'postcode' => $order['delivery_postcode'],
-        'state' => $order['delivery_state'],
-        'country' => array('title' => $order['delivery_country']),
-        'format_id' => $order['delivery_address_format_id']);
+    $toReturn->delivery = array('name' => trim($order->fields['delivery_name']),
+        'company' => $order->fields['delivery_company'],
+        'street_address' => $order->fields['delivery_street_address'],
+        'suburb' => $order->fields['delivery_suburb'],
+        'city' => $order->fields['delivery_city'],
+        'postcode' => $order->fields['delivery_postcode'],
+        'state' => $order->fields['delivery_state'],
+        'country' => array('title' => $order->fields['delivery_country']),
+        'format_id' => $order->fields['delivery_address_format_id']);
 
     if (empty($toReturn->delivery['name']) && empty($toReturn->delivery['street_address'])) {
         $toReturn->delivery = false;
     }
 
-    $toReturn->billing = array('name' => $order['billing_name'],
-        'company' => $order['billing_company'],
-        'street_address' => $order['billing_street_address'],
-        'suburb' => $order['billing_suburb'],
-        'city' => $order['billing_city'],
-        'postcode' => $order['billing_postcode'],
-        'state' => $order['billing_state'],
-        'country' => array('title' => $order['billing_country']),
-        'format_id' => $order['billing_address_format_id']);
+    $toReturn->billing = array('name' => $order->fields['billing_name'],
+        'company' => $order->fields['billing_company'],
+        'street_address' => $order->fields['billing_street_address'],
+        'suburb' => $order->fields['billing_suburb'],
+        'city' => $order->fields['billing_city'],
+        'postcode' => $order->fields['billing_postcode'],
+        'state' => $order->fields['billing_state'],
+        'country' => array('title' => $order->fields['billing_country']),
+        'format_id' => $order->fields['billing_address_format_id']);
     return $toReturn;
 }
 
@@ -648,11 +648,11 @@ function getCountryIsoFromName($name){
     global $db;
     $country = $db->Execute("select * from " . TABLE_COUNTRIES . " where countries_name = '" . $name . "'");
 
-    return $country['countries_iso_code_2'];
+    return $country->fields['countries_iso_code_2'];
 }
 
 function getTotal($id){
     global $db;
     $total = $db->Execute("select * from " . TABLE_ORDERS_TOTAL . " where class = 'ot_total'  AND orders_id = '" . $id . "'");
-    return $total['value'];
+    return $total->fields['value'];
 }

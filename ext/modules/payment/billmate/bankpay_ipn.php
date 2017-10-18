@@ -54,7 +54,7 @@ if(!class_exists('Encoding',false)){
 				$has_billmatecardpay_ref = false;
 				$fields = $db->Execute("show columns from " . TABLE_ORDERS);
 				while(!$fields->EOF) {
-					if ( $fields['Field'] == "billmateref" )
+					if ( $fields->fields['Field'] == "billmateref" )
 						$has_BILLMATE_ref = true;
 					$fields->MoveNext();
 				}
