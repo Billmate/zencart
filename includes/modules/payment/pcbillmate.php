@@ -42,7 +42,7 @@ class pcbillmate {
 
     // class constructor
     function pcbillmate() {
-        global $order, $currency, $cart, $currencies, $customer_id, $customer_country_id, $pcbillmate_testmode;
+        global $order, $currency, $cart, $currencies, $customer_id, $customer_country_id, $pcbillmate_testmode,$db;
         $this->jQuery = true;
         $this->code = 'pcbillmate';
 
@@ -98,14 +98,13 @@ class pcbillmate {
                 }
             }
             else {
-                $query = tep_db_query("SELECT countries_iso_code_2 FROM countries WHERE countries_id = " . (int)$_SESSION['customer_country_id']);
-                $result = tep_db_fetch_array($query);
-        
-                if(is_array($result)) {
-                    if(!in_array(strtoupper($result['countries_iso_code_2']),$countryValid)) {
+                $result = $db->Execute("SELECT countries_iso_code_2 FROM countries WHERE countries_id = " . (int)$_SESSION['customer_country_id']);
+
+                if($result->RecordCount() > 0) {
+                    if(!in_array(strtoupper($result->fields['countries_iso_code_2']),$countryValid)) {
                         $this->enabled = false;
                     }
-                    $this->enabled = $this->enabled && in_array(strtoupper($result['countries_iso_code_2']),$enabled_countries);
+                    $this->enabled = $this->enabled && in_array(strtoupper($result->fields['countries_iso_code_2']),$enabled_countries);
                 }
                 else {
                     $this->enabled = false;
@@ -138,10 +137,10 @@ class pcbillmate {
 
     // class methods
     function update_status() {
-        global $order;
+        global $order, $db;
         if ($this->enabled == true && (int)MODULE_PAYMENT_PCBILLMATE_ZONE > 0) {
             $check_flag = false;
-            $check_query = tep_db_query("select zone_id from " .
+            $check = $db->Execute("select zone_id from " .
                     TABLE_ZONES_TO_GEO_ZONES .
                     " where geo_zone_id = '" .
                     MODULE_PAYMENT_PCBILLMATE_ZONE .
@@ -149,14 +148,15 @@ class pcbillmate {
                     $order->billing['country']['id'] .
                     "' order by zone_id");
 
-            while ($check = tep_db_fetch_array($check_query)) {
-                if ($check['zone_id'] < 1) {
+            while (!$check->EOF) {
+                if ($check->fields['zone_id'] < 1) {
                     $check_flag = true;
                     break;
-                } elseif ($check['zone_id'] == $order->billing['zone_id']) {
+                } elseif ($check->fields['zone_id'] == $order->billing['zone_id']) {
                     $check_flag = true;
                     break;
                 }
+                $check->MoveNext();
             }
 
             if ($check_flag == false) {
@@ -174,7 +174,7 @@ class pcbillmate {
 					return true;
 				}
 				$.ajax({
-					url: "'.tep_href_link('ext/modules/payment/billmate/getaddress.php?method='.$this->code, '', 'SSL').'",
+					url: "'.zen_href_link('ext/modules/payment/billmate/getaddress.php?method='.$this->code, '', 'SSL').'",
 					data: formdata,
 					method: "POST",
 					success:function(response){
@@ -201,7 +201,7 @@ class pcbillmate {
     }
 
     function selection() {
-        global $pcbillmate_testmode, $order, $customer_id, $currencies, $KRED_ISO3166_SE, $currency, $user_billing, $shipping,$languages_id,$cart_billmate_card_ID;
+        global $pcbillmate_testmode, $order, $customer_id, $currencies, $KRED_ISO3166_SE, $currency, $user_billing, $shipping,$languages_id,$cart_billmate_card_ID,$db;
 
         //Set the right Host and Port
         $livemode = $this->pcbillmate_testmode == false;
@@ -211,53 +211,24 @@ class pcbillmate {
         $eid = MODULE_PAYMENT_PCBILLMATE_EID;
         $secret = MODULE_PAYMENT_PCBILLMATE_SECRET;
 
-        if (tep_session_is_registered('cart_billmate_card_ID')) {
+        if (zen_session_is_registered('cart_billmate_card_ID')) {
             $order_id = $insert_id = $cart_billmate_card_ID;
 
-            $check_query = tep_db_query('select orders_id from ' . TABLE_ORDERS_STATUS_HISTORY . ' where orders_id = "' . (int)$order_id . '" limit 1');
+            $check_query = $db->Execute('select orders_id from ' . TABLE_ORDERS_STATUS_HISTORY . ' where orders_id = "' . (int)$order_id . '" limit 1');
 
-            if (tep_db_num_rows($check_query) < 1) {
-                tep_db_query('delete from ' . TABLE_ORDERS . ' where orders_id = "' . (int)$order_id . '"');
-                tep_db_query('delete from ' . TABLE_ORDERS_TOTAL . ' where orders_id = "' . (int)$order_id . '"');
-                tep_db_query('delete from ' . TABLE_ORDERS_STATUS_HISTORY . ' where orders_id = "' . (int)$order_id . '"');
-                tep_db_query('delete from ' . TABLE_ORDERS_PRODUCTS . ' where orders_id = "' . (int)$order_id . '"');
-                tep_db_query('delete from ' . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . ' where orders_id = "' . (int)$order_id . '"');
-                tep_db_query('delete from ' . TABLE_ORDERS_PRODUCTS_DOWNLOAD . ' where orders_id = "' . (int)$order_id . '"');
+            if ($check_query->RecordCount() < 1) {
+                $db->Execute('delete from ' . TABLE_ORDERS . ' where orders_id = "' . (int)$order_id . '"');
+                $db->Execute('delete from ' . TABLE_ORDERS_TOTAL . ' where orders_id = "' . (int)$order_id . '"');
+                $db->Execute('delete from ' . TABLE_ORDERS_STATUS_HISTORY . ' where orders_id = "' . (int)$order_id . '"');
+                $db->Execute('delete from ' . TABLE_ORDERS_PRODUCTS . ' where orders_id = "' . (int)$order_id . '"');
+                $db->Execute('delete from ' . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . ' where orders_id = "' . (int)$order_id . '"');
+                $db->Execute('delete from ' . TABLE_ORDERS_PRODUCTS_DOWNLOAD . ' where orders_id = "' . (int)$order_id . '"');
 
-                tep_session_unregister('cart_billmate_card_ID');
+                zen_session_unregister('cart_billmate_card_ID');
             }
         }
 
-        $find_personnummer_field_query =
-                tep_db_query("show columns from " . TABLE_CUSTOMERS);
 
-        $has_personnummer = false;
-        $has_dob = false;
-
-        while($fields = tep_db_fetch_array($find_personnummer_field_query)) {
-            if ($fields['Field'] == "customers_personnummer")
-                $has_personnummer = true;
-            if ($fields['Field'] == "customers_dob")
-                $has_dob = true;
-        }
-
-        if ($has_personnummer) {
-            $customer_query = tep_db_query("select customers_personnummer from " .
-                    TABLE_CUSTOMERS . " where customers_id = '" . (int)$customer_id."'");
-            $customer = tep_db_fetch_array($customer_query);
-
-            $personnummer = $customer['customers_personnummer'];
-        }
-        else if ($has_dob) {
-            $customer_query = tep_db_query("select DATE_FORMAT(customers_dob, '%Y%m%d') AS customers_dob from " .
-                    TABLE_CUSTOMERS . " where customers_id = '" . (int)$customer_id."'");
-            $customer = tep_db_fetch_array($customer_query);
-            $personnummer = ""; //$personnummer = $customer['customers_dob'];
-        }
-        else
-            $personnummer = "";
-
-        if (MODULE_PAYMENT_PCBILLMATE_PRE_POPULATE == "False")
             $personnummer = "";
 
         $er = $currencies->get_value($currency);
@@ -281,13 +252,13 @@ class pcbillmate {
 			$total += $order->info['shipping_cost'] * ($shipp[0]['tax']/100);
 	    }
         //Get and calculate monthly costs for all pclasses
-        $languageCode = tep_db_fetch_array(tep_db_query("select code from languages where languages_id = " . $languages_id));
-        $languageCode = tep_db_fetch_array(tep_db_query("select code from languages where languages_id = " . $languages_id));
-        if(!in_array($languageCode['code'],array('sv','en','se')))
-            $languageCode['code'] = 'en';
-        $languageCode['code'] = $languageCode['code'] == 'se' ? 'sv' : $languageCode['code'];
+        $languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
+        $langCode = '';
+        if(!in_array($languageCode->fields['code'],array('sv','en','se')))
+            $langCode = 'en';
+        $langCode = $languageCode->fields['code'] == 'se' ? 'sv' : $languageCode->fields['code'];
 
-        $pclasses = BillmateUtils::calc_monthly_cost($total, MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, $order->billing['country']['iso_code_2'], 0,$languageCode['code'],MODULE_PAYMENT_PCBILLMATE_MONTH);
+        $pclasses = BillmateUtils::calc_monthly_cost($total, MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, $order->billing['country']['iso_code_2'], 0,$langCode,MODULE_PAYMENT_PCBILLMATE_MONTH);
         
         $lowest = BillmateUtils::get_cheapest_pclass($pclasses,$total);
 
@@ -329,14 +300,14 @@ class pcbillmate {
                 array('title' => sprintf(MODULE_PAYMENT_PCBILLMATE_CONDITIONS, $eid),
 	                'field' => "<a href=\"#\" id=\"pcbillmate\" onclick=\"ShowBillmateInvoicePopup(event);return false;\"></a>"),
                 array('title' => MODULE_PAYMENT_PCBILLMATE_CHOOSECONSUMERCREDIT,
-                        'field' => tep_draw_pull_down_menu('pcbillmate_pclass', $pclasses, $default)),
+                        'field' => zen_draw_pull_down_menu('pcbillmate_pclass', $pclasses, $default)),
                 array('title' => MODULE_PAYMENT_PCBILLMATE_PERSON_NUMBER,
-                        'field' => tep_draw_input_field('pcbillmate_pnum',
+                        'field' => zen_draw_input_field('pcbillmate_pnum',
                         $pcbillmate_pnum)),
                 array('title' => "<link rel='stylesheet' href='".HTTP_SERVER.DIR_WS_HTTP_CATALOG."/billmatestyle.css'/>",
-                        'field' => tep_draw_hidden_field('pcbillmate_phone',
+                        'field' => zen_draw_hidden_field('pcbillmate_phone',
                         $pcbillmate_phone)),
-                array('title' => tep_draw_checkbox_field('pcbillmate_email',
+                array('title' => zen_draw_checkbox_field('pcbillmate_email',
                     $order->customer['email_address'], !empty($pcbillmate_email) || $user_billing['pcbillmate_pnum'] == NULL).sprintf(MODULE_PAYMENT_PCBILLMATE_EMAIL, $user_billing['billmate_email']),
                         'field' =>  ''));
 
@@ -356,7 +327,7 @@ class pcbillmate {
     }
 
     function pre_confirmation_check() {
-        global $pcbillmate_testmode, $order, $GA_OLD, $KRED_SE_PNO, $user_billing,$languages_id,$billmate_pno;
+        global $pcbillmate_testmode, $order, $GA_OLD, $KRED_SE_PNO, $user_billing,$languages_id,$billmate_pno,$db;
 
         //Set the right Host and Port
         $livemode = $this->pcbillmate_testmode == false;
@@ -375,7 +346,7 @@ class pcbillmate {
         $user_billing['pcbillmate_email'] = $_POST['pcbillmate_email'];
 
         //Store values into Session
-        tep_session_register('user_billing');
+        zen_session_register('user_billing');
 
         if (!validate_pno_se($_POST['pcbillmate_pnum'])) {
             $errors[] = MODULE_PAYMENT_PCBILLMATE_PERSON_NUMBER;
@@ -387,7 +358,7 @@ class pcbillmate {
 
         if (!empty($errors)) {
             $error_message = implode(', ', $errors);
-            tep_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=pcbillmate&error='.$error_message, 'SSL'));
+            zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=pcbillmate&error='.$error_message, 'SSL'));
         }
 
         $pno = $this->pcbillmate_pnum = $_POST['pcbillmate_pnum'];
@@ -398,17 +369,17 @@ class pcbillmate {
         $pnoencoding = $KRED_SE_PNO;
 
         $billmate_pno = $pno;
-        tep_session_register('billmate_pno');
+        zen_session_register('billmate_pno');
         $type = $GA_OLD;
-	    $languageCode = tep_db_fetch_array(tep_db_query("select code from languages where languages_id = " . $languages_id));
-        $languageCode['code']  = (strtolower($languageCode['code']) == 'se') ? 'sv' : $languageCode['code'];
-	    if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$languageCode['code']);
+	    $languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
+        $langCode  = (strtolower($languageCode->fields['code']) == 'se') ? 'sv' : $languageCode->fields['code'];
+	    if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$langCode);
         if(!defined('BILLMATE_SERVER')) define('BILLMATE_SERVER','2.1.7');
 		$k = new BillMate($eid,$secret,true, $this->pcbillmate_testmode, false);
 		$result = (object)$k->GetAddress(array('pno'=>$pno));
 
 		if (isset($result->message) || empty($result) || !is_object($result)) {
-            tep_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
+            zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
                     'payment_error=pcbillmate&error='.strip_tags( utf8_encode($result->message) ),
                     'SSL', true, false));
         }
@@ -504,7 +475,7 @@ class pcbillmate {
                 $WrongAddress = $code;
                 global $messageStack;
                 $_SESSION['WrongAddress'] = $WrongAddress;
-                tep_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=pcbillmate&error=invalidaddress', 'SSL'));
+                zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=pcbillmate&error=invalidaddress', 'SSL'));
 	        }else{
 	            if(!match_usernamevp( $fullname , $apiName)){
                     if($result->firstname == "") {
@@ -520,8 +491,7 @@ class pcbillmate {
                 $this->pcbillmate_street = $result->street;
                 $this->pcbillmate_postno = $result->zip;
                 $this->pcbillmate_city = $result->city;
-                $country_query = tep_db_query("select countries_id from " . TABLE_COUNTRIES . " where countries_iso_code_2 = '" .$result->country . "'");
-                $country = tep_db_fetch_array($country_query);
+                $country = $db->Execute("select countries_id from " . TABLE_COUNTRIES . " where countries_iso_code_2 = '" .$result->country . "'");
                 global $customer_id;
                 $data = array(
                     'entry_firstname'       =>$this->pcbillmate_fname,
@@ -529,7 +499,7 @@ class pcbillmate {
                     'entry_street_address'  =>$this->pcbillmate_street,
                     'entry_postcode'        =>$this->pcbillmate_postno,
                     'entry_city'            =>$this->pcbillmate_city,
-                    'entry_country_id'      =>$country['countries_id'],
+                    'entry_country_id'      =>$country->fields['countries_id'],
                     'customers_id'          => $customer_id
                 );
 
@@ -567,24 +537,23 @@ class pcbillmate {
     }
 
     function confirmation() {
-        global $cartID, $cart_billmate_card_ID, $customer_id, $languages_id, $order, $order_total_modules, $currencies;
+        global $cartID, $cart_billmate_card_ID, $customer_id, $languages_id, $order, $order_total_modules, $currencies, $db;
 
-        if (tep_session_is_registered('cart_billmate_card_ID')) {
+        if (zen_session_is_registered('cart_billmate_card_ID')) {
             $order_id = $cart_billmate_card_ID;
 
-            $curr_check = tep_db_query("select currency from " . TABLE_ORDERS . " where orders_id = '" . (int)$order_id . "'");
-            $curr = tep_db_fetch_array($curr_check);
+            $curr = $db->Execute("select currency from " . TABLE_ORDERS . " where orders_id = '" . (int)$order_id . "'");
 
-            if ( ($curr['currency'] != $order->info['currency']) ) {
-                $check_query = tep_db_query('select orders_id from ' . TABLE_ORDERS_STATUS_HISTORY . ' where orders_id = "' . (int)$order_id . '" limit 1');
+            if ( ($curr->fields['currency'] != $order->info['currency']) ) {
+                $check_query = $db->Execute('select orders_id from ' . TABLE_ORDERS_STATUS_HISTORY . ' where orders_id = "' . (int)$order_id . '" limit 1');
 
-                if (tep_db_num_rows($check_query) < 1) {
-                    tep_db_query('delete from ' . TABLE_ORDERS . ' where orders_id = "' . (int)$order_id . '"');
-                    tep_db_query('delete from ' . TABLE_ORDERS_TOTAL . ' where orders_id = "' . (int)$order_id . '"');
-                    tep_db_query('delete from ' . TABLE_ORDERS_STATUS_HISTORY . ' where orders_id = "' . (int)$order_id . '"');
-                    tep_db_query('delete from ' . TABLE_ORDERS_PRODUCTS . ' where orders_id = "' . (int)$order_id . '"');
-                    tep_db_query('delete from ' . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . ' where orders_id = "' . (int)$order_id . '"');
-                    tep_db_query('delete from ' . TABLE_ORDERS_PRODUCTS_DOWNLOAD . ' where orders_id = "' . (int)$order_id . '"');
+                if ($check_query->RecordCount() < 1) {
+                    $db->Execute('delete from ' . TABLE_ORDERS . ' where orders_id = "' . (int)$order_id . '"');
+                    $db->Execute('delete from ' . TABLE_ORDERS_TOTAL . ' where orders_id = "' . (int)$order_id . '"');
+                    $db->Execute('delete from ' . TABLE_ORDERS_STATUS_HISTORY . ' where orders_id = "' . (int)$order_id . '"');
+                    $db->Execute('delete from ' . TABLE_ORDERS_PRODUCTS . ' where orders_id = "' . (int)$order_id . '"');
+                    $db->Execute('delete from ' . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . ' where orders_id = "' . (int)$order_id . '"');
+                    $db->Execute('delete from ' . TABLE_ORDERS_PRODUCTS_DOWNLOAD . ' where orders_id = "' . (int)$order_id . '"');
                 }
 
                 $insert_order = true;
@@ -611,7 +580,7 @@ class pcbillmate {
                     } else {
                         if ($GLOBALS[$class]->enabled) {
                             for ($i=0, $n=sizeof($GLOBALS[$class]->output); $i<$n; $i++) {
-                                if (tep_not_null($GLOBALS[$class]->output[$i]['title']) && tep_not_null($GLOBALS[$class]->output[$i]['text'])) {
+                                if (zen_not_null($GLOBALS[$class]->output[$i]['title']) && zen_not_null($GLOBALS[$class]->output[$i]['text'])) {
                                     $order_totals[] = array('code' => $GLOBALS[$class]->code,
                                         'title' => $GLOBALS[$class]->output[$i]['title'],
                                         'text' => $GLOBALS[$class]->output[$i]['text'],
@@ -664,9 +633,9 @@ class pcbillmate {
                 'currency' => $order->info['currency'],
                 'currency_value' => $order->info['currency_value']);
 
-            tep_db_perform(TABLE_ORDERS, $sql_data_array);
+            $db->perform(TABLE_ORDERS, $sql_data_array);
 
-            $insert_id = tep_db_insert_id();
+            $insert_id = $db->InsertId();
 
             for ($i=0, $n=sizeof($order_totals); $i<$n; $i++) {
                 $sql_data_array = array('orders_id' => $insert_id,
@@ -676,7 +645,7 @@ class pcbillmate {
                     'class' => $order_totals[$i]['code'],
                     'sort_order' => $order_totals[$i]['sort_order']);
 
-                tep_db_perform(TABLE_ORDERS_TOTAL, $sql_data_array);
+                $db->perform(TABLE_ORDERS_TOTAL, $sql_data_array);
             }
 
             $customer_notification = (SEND_EMAILS == 'true') ? '1' : '0';
@@ -685,7 +654,7 @@ class pcbillmate {
                 'date_added' => 'now()',
                 'customer_notified' => 0,
                 'comments' => $order->info['comments']);
-            tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+            $db->perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
 
             for ($i=0, $n=sizeof($order->products); $i<$n; $i++) {
                 $sql_data_array = array('orders_id' => $insert_id,
@@ -697,9 +666,9 @@ class pcbillmate {
                     'products_tax' => $order->products[$i]['tax'],
                     'products_quantity' => $order->products[$i]['qty']);
 
-                tep_db_perform(TABLE_ORDERS_PRODUCTS, $sql_data_array);
+                $db->perform(TABLE_ORDERS_PRODUCTS, $sql_data_array);
 
-                $order_products_id = tep_db_insert_id();
+                $order_products_id = $db->InsertId();;
 
                 $attributes_exist = '0';
                 if (isset($order->products[$i]['attributes'])) {
@@ -717,60 +686,60 @@ class pcbillmate {
                                        and pa.options_values_id = poval.products_options_values_id
                                        and popt.language_id = '" . $languages_id . "'
                                        and poval.language_id = '" . $languages_id . "'";
-                            $attributes = tep_db_query($attributes_query);
+                            $attributes = $attributes_query;
                         } else {
-                            $attributes = tep_db_query("select popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix from " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval, " . TABLE_PRODUCTS_ATTRIBUTES . " pa where pa.products_id = '" . $order->products[$i]['id'] . "' and pa.options_id = '" . $order->products[$i]['attributes'][$j]['option_id'] . "' and pa.options_id = popt.products_options_id and pa.options_values_id = '" . $order->products[$i]['attributes'][$j]['value_id'] . "' and pa.options_values_id = poval.products_options_values_id and popt.language_id = '" . $languages_id . "' and poval.language_id = '" . $languages_id . "'");
+                            $attributes = "select popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix from " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval, " . TABLE_PRODUCTS_ATTRIBUTES . " pa where pa.products_id = '" . $order->products[$i]['id'] . "' and pa.options_id = '" . $order->products[$i]['attributes'][$j]['option_id'] . "' and pa.options_id = popt.products_options_id and pa.options_values_id = '" . $order->products[$i]['attributes'][$j]['value_id'] . "' and pa.options_values_id = poval.products_options_values_id and popt.language_id = '" . $languages_id . "' and poval.language_id = '" . $languages_id . "'";
                         }
-                        $attributes_values = tep_db_fetch_array($attributes);
+                        $attributes_values = $db->Execute($attributes);
 
                         $sql_data_array = array('orders_id' => $insert_id,
                             'orders_products_id' => $order_products_id,
-                            'products_options' => $attributes_values['products_options_name'],
-                            'products_options_values' => $attributes_values['products_options_values_name'],
-                            'options_values_price' => $attributes_values['options_values_price'],
-                            'price_prefix' => $attributes_values['price_prefix']);
+                            'products_options' => $attributes_values->fields['products_options_name'],
+                            'products_options_values' => $attributes_values->fields['products_options_values_name'],
+                            'options_values_price' => $attributes_values->fields['options_values_price'],
+                            'price_prefix' => $attributes_values->fields['price_prefix']);
 
-                        tep_db_perform(TABLE_ORDERS_PRODUCTS_ATTRIBUTES, $sql_data_array);
+                        $db->perform(TABLE_ORDERS_PRODUCTS_ATTRIBUTES, $sql_data_array);
 
-                        if ((DOWNLOAD_ENABLED == 'true') && isset($attributes_values['products_attributes_filename']) && tep_not_null($attributes_values['products_attributes_filename'])) {
+                        if ((DOWNLOAD_ENABLED == 'true') && isset($attributes_values->fields['products_attributes_filename']) && zen_not_null($attributes_values->fields['products_attributes_filename'])) {
                             $sql_data_array = array('orders_id' => $insert_id,
                                 'orders_products_id' => $order_products_id,
-                                'orders_products_filename' => $attributes_values['products_attributes_filename'],
-                                'download_maxdays' => $attributes_values['products_attributes_maxdays'],
-                                'download_count' => $attributes_values['products_attributes_maxcount']);
+                                'orders_products_filename' => $attributes_values->fields['products_attributes_filename'],
+                                'download_maxdays' => $attributes_values->fields['products_attributes_maxdays'],
+                                'download_count' => $attributes_values->fields['products_attributes_maxcount']);
 
-                            tep_db_perform(TABLE_ORDERS_PRODUCTS_DOWNLOAD, $sql_data_array);
+                            $db->perform(TABLE_ORDERS_PRODUCTS_DOWNLOAD, $sql_data_array);
                         }
                     }
                 }
             }
 
             $cart_billmate_card_ID =  $insert_id;
-            tep_session_register('cart_billmate_card_ID');
+            zen_session_register('cart_billmate_card_ID');
         }
         return array('title' => MODULE_PAYMENT_PCBILLMATE_TEXT_CONFIRM_DESCRIPTION);
     }
 
     function process_button() {
-        global $order, $order_total_modules, $pcbillmate_ot, $shipping,$pclass,$cart_billmate_card_ID;
+        global $order, $order_total_modules, $pcbillmate_ot, $shipping,$pclass,$cart_billmate_card_ID,$db;
         $counter = 1;
         $process_button_string = '';
         $checked = true;
 		$process_button_string .=
-		tep_draw_hidden_field('addr_num', $counter, $checked, '').
-		tep_draw_hidden_field('pcbillmate_fname'.$counter, convertToUTF8($order->billing['firstname'])).
-		tep_draw_hidden_field('pcbillmate_lname'.$counter, convertToUTF8($order->billing['lastname'])).
-		tep_draw_hidden_field('pcbillmate_street'.$counter, convertToUTF8($order->billing['street_address'])).
-		tep_draw_hidden_field('pcbillmate_postno'.$counter, $order->billing['postcode']).
-		tep_draw_hidden_field('pcbillmate_company'.$counter, convertToUTF8($order->billing['company'])).
-		tep_draw_hidden_field('pcbillmate_city'.$counter, convertToUTF8($order->billing['city'])).
-		tep_draw_hidden_field('pcbillmate_country'.$counter,  convertToUTF8($this->addrs->country)).
-		tep_draw_hidden_field('pcbillmate_pclass'.$counter,$this->pcbillmate_pclass).
-		tep_draw_hidden_field('pcbillmate_pnum'.$counter,$this->pcbillmate_pnum);
+		zen_draw_hidden_field('addr_num', $counter, $checked, '').
+		zen_draw_hidden_field('pcbillmate_fname'.$counter, convertToUTF8($order->billing['firstname'])).
+		zen_draw_hidden_field('pcbillmate_lname'.$counter, convertToUTF8($order->billing['lastname'])).
+		zen_draw_hidden_field('pcbillmate_street'.$counter, convertToUTF8($order->billing['street_address'])).
+		zen_draw_hidden_field('pcbillmate_postno'.$counter, $order->billing['postcode']).
+		zen_draw_hidden_field('pcbillmate_company'.$counter, convertToUTF8($order->billing['company'])).
+		zen_draw_hidden_field('pcbillmate_city'.$counter, convertToUTF8($order->billing['city'])).
+		zen_draw_hidden_field('pcbillmate_country'.$counter,  convertToUTF8($this->addrs->country)).
+		zen_draw_hidden_field('pcbillmate_pclass'.$counter,$this->pcbillmate_pclass).
+		zen_draw_hidden_field('pcbillmate_pnum'.$counter,$this->pcbillmate_pnum);
 
 
         $pclass = $this->pcbillmate_pclass;
-        tep_session_register('pclass');
+        zen_session_register('pclass');
         $order_totals = $order_total_modules->modules;
 
         if (is_array($order_totals)) {
@@ -814,7 +783,7 @@ class pcbillmate {
                                 $tax_class = @$GLOBALS[$shipping_id[0]]->tax_class;
                                 $tax_rate = 0;
                                 if($tax_class > 0) {
-                                    $tax_rate = tep_get_tax_rate($tax_class, $order->billing['country']['id'], ($order->billing['zone_id'] > 0) ? $order->billing['zone_id'] : null);
+                                    $tax_rate = zen_get_tax_rate($tax_class, $order->billing['country']['id'], ($order->billing['zone_id'] > 0) ? $order->billing['zone_id'] : null);
                                 }
                                 $pcbillmate_ot['tax_rate_'.$j.'_'.$i] = $tax_rate;
                             } else {
@@ -830,13 +799,13 @@ class pcbillmate {
             $pcbillmate_ot['code_entries'] = $j;
         }
 
-        tep_session_register('pcbillmate_ot');
+        zen_session_register('pcbillmate_ot');
 
-        $process_button_string .= tep_draw_hidden_field(tep_session_name(),
-            tep_session_id());
+        $process_button_string .= zen_draw_hidden_field(zen_session_name(),
+            zen_session_id());
         //$return = $this->doInvoice();
         $redirect = false;
-        $redirect = tep_href_link('ext/modules/payment/billmate/payment.php', 'method=partpay%26order_id='.$cart_billmate_card_ID, 'SSL');
+        $redirect = zen_href_link('ext/modules/payment/billmate/payment.php', 'method=partpay%26order_id='.$cart_billmate_card_ID, 'SSL');
 
         if($redirect) {
             $process_button_string .= '<script type="text/javascript">
@@ -864,7 +833,7 @@ class pcbillmate {
 
     function doInvoice($add_order = false ){
         global $order, $customer_id, $currency, $currencies, $sendto, $billto,
-               $pcbillmate,$insert_id, $languages_id, $language_id, $language, $currency, $cart_billmate_card_ID,$billmate_pno,$pclass;
+               $pcbillmate,$insert_id, $languages_id, $language_id, $language, $currency, $cart_billmate_card_ID,$billmate_pno,$pclass,$db;
 
         $pcbillmate = $_SESSION['pcbillmate_ot'];
 
@@ -1026,18 +995,18 @@ class pcbillmate {
 
         $ssl = true;
         $debug = false;
-        $languageCode = tep_db_fetch_array(tep_db_query("select code from languages where languages_id = " . $languages_id));
-        $languageCode['code']  = (strtolower($languageCode['code']) == 'se') ? 'sv' : $languageCode['code'];
+        $languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
+        $langCode  = (strtolower($languageCode->fields['code']) == 'se') ? 'sv' : $languageCode->fields['code'];
 
-        if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$languageCode['code']);
+        if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$langCode);
         if(!defined('BILLMATE_SERVER')) define('BILLMATE_SERVER','2.1.7');
-        if(tep_session_is_registered('billmate_pno')){
+        if(zen_session_is_registered('billmate_pno')){
             $pno = $billmate_pno;
         }
 
         $k = new BillMate($eid,$secret,$ssl,$this->pcbillmate_testmode,$debug,$codes);
         $invoiceValues = array();
-        $lang = $languageCode['code'] == 'se' ? 'sv' : $languageCode['code'];
+        $lang = $languageCode->fields['code'] == 'se' ? 'sv' : $languageCode->fields['code'];
         $invoiceValues['PaymentData'] = array(	"method" => "4",		//1=Factoring, 2=Service, 4=PartPayment, 8=Card, 16=Bank, 24=Card/bank and 32=Cash.
             "currency" => $currency, //"SEK",
             "paymentplanid" => $pclass,
@@ -1046,9 +1015,9 @@ class pcbillmate {
             "orderid" => (string)$cart_billmate_card_ID,
             "bankid" => true,
             "returnmethod" => "GET",
-            "accepturl" => tep_href_link(FILENAME_CHECKOUT_PROCESS,'', 'SSL'),
-            "cancelurl" => tep_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL'),
-            "callbackurl" => tep_href_link('ext/modules/payment/billmate/common_ipn.php', '', 'SSL')
+            "accepturl" => zen_href_link(FILENAME_CHECKOUT_PROCESS,'', 'SSL'),
+            "cancelurl" => zen_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL'),
+            "callbackurl" => zen_href_link('ext/modules/payment/billmate/common_ipn.php', '', 'SSL')
         );
         $invoiceValues['PaymentInfo'] = array( 	"paymentdate" => date('Y-m-d'),
             "yourreference" => "",
@@ -1096,7 +1065,7 @@ class pcbillmate {
         }
         else {
             billmate_remove_order($cart_billmate_card_ID,true);
-            tep_session_unregister('cart_Billmate_card_ID');
+            zen_session_unregister('cart_Billmate_card_ID');
             return $result1;
 
         }
@@ -1104,7 +1073,7 @@ class pcbillmate {
     }
 
     function before_process() {
-        global $order, $customer_id, $currency, $currencies, $sendto, $billto, $pcbillmate_ot, $pcbillmate_testmode,$languages_id, $cart_billmate_card_ID, $cart, $order_id,$payment;
+        global $order, $customer_id, $currency, $currencies, $sendto, $billto, $pcbillmate_ot, $pcbillmate_testmode,$languages_id, $cart_billmate_card_ID, $cart, $order_id,$payment,$db;
 
 		//Assigning billing session
 		$pcbillmate = $_SESSION['pcbillmate_ot'];
@@ -1129,27 +1098,25 @@ class pcbillmate {
         if(!isset($_DATA['status']) || ($_DATA['status'] == 'Cancelled' || $_DATA['status'] == 'Failed')) {
 
             billmate_remove_order($_DATA['orderid'],true);
-            tep_session_unregister('cart_Billmate_card_ID');
-            tep_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
+            zen_session_unregister('cart_Billmate_card_ID');
+            zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
                 'payment_error=billmate_invoice&error=Please try again.',
                 'SSL', true, false));
             return;
         }
-        $status = tep_db_query("select orders_status from ".TABLE_ORDERS." where orders_id = {$_DATA['orderid']}");
-        $status_array = tep_db_fetch_array( $status );
 
-        $status_history = tep_db_query("select orders_status_history_id from ".TABLE_ORDERS_STATUS_HISTORY.
+
+        $status_history_a = $db->Execute("select orders_status_history_id from ".TABLE_ORDERS_STATUS_HISTORY.
             " where orders_id = {$_DATA['orderid']} and comments='Billmate_IPN'");
 
-        $status_history_a = tep_db_fetch_array($status_history);
 
-        if( $status_history_a ){
+        if( $status_history_a->RecordCount() > 0 ){
             $already_completed = true;
-            tep_session_register('already_completed');
-            tep_session_unregister('billmatecardpay_ot');
+            zen_session_register('already_completed');
+            zen_session_unregister('billmatecardpay_ot');
         }else {
             $already_completed = false;
-            tep_session_register('already_completed');
+            zen_session_register('already_completed');
         }
         $products_ordered = '';
         $subtotal = 0;
@@ -1171,27 +1138,27 @@ class pcbillmate {
                     if (is_array($products_attributes)) {
                         $stock_query_raw .= " AND pa.options_id = '" . $products_attributes[0]['option_id'] . "' AND pa.options_values_id = '" . $products_attributes[0]['value_id'] . "'";
                     }
-                    $stock_query = tep_db_query($stock_query_raw);
+                    $stock_query = $stock_query_raw;
                 } else {
-                    $stock_query = tep_db_query("select products_quantity from " . TABLE_PRODUCTS . " where products_id = '" . tep_get_prid($order->products[$i]['id']) . "'");
+                    $stock_query = "select products_quantity from " . TABLE_PRODUCTS . " where products_id = '" . zen_get_prid($order->products[$i]['id']) . "'";
                 }
-                if (tep_db_num_rows($stock_query) > 0) {
-                    $stock_values = tep_db_fetch_array($stock_query);
+                $stock_values = $db->Execute($stock_query);
+                if ($stock_values->RecordCount() > 0) {
 // do not decrement quantities if products_attributes_filename exists
-                    if ((DOWNLOAD_ENABLED != 'true') || (!$stock_values['products_attributes_filename'])) {
-                        $stock_left = $stock_values['products_quantity'] - $order->products[$i]['qty'];
+                    if ((DOWNLOAD_ENABLED != 'true') || (!$stock_values->fields['products_attributes_filename'])) {
+                        $stock_left = $stock_values->fields['products_quantity'] - $order->products[$i]['qty'];
                     } else {
-                        $stock_left = $stock_values['products_quantity'];
+                        $stock_left = $stock_values->fields['products_quantity'];
                     }
-                    tep_db_query("update " . TABLE_PRODUCTS . " set products_quantity = '" . $stock_left . "' where products_id = '" . tep_get_prid($order->products[$i]['id']) . "'");
+                    $db->Execute("update " . TABLE_PRODUCTS . " set products_quantity = '" . $stock_left . "' where products_id = '" . zen_get_prid($order->products[$i]['id']) . "'");
                     if ( ($stock_left < 1) && (STOCK_ALLOW_CHECKOUT == 'false') ) {
-                        tep_db_query("update " . TABLE_PRODUCTS . " set products_status = '0' where products_id = '" . tep_get_prid($order->products[$i]['id']) . "'");
+                        $db->Execute("update " . TABLE_PRODUCTS . " set products_status = '0' where products_id = '" . zen_get_prid($order->products[$i]['id']) . "'");
                     }
                 }
             }
 
 // Update products_ordered (for bestsellers list)
-            tep_db_query("update " . TABLE_PRODUCTS . " set products_ordered = products_ordered + " . sprintf('%d', $order->products[$i]['qty']) . " where products_id = '" . tep_get_prid($order->products[$i]['id']) . "'");
+            $db->Execute("update " . TABLE_PRODUCTS . " set products_ordered = products_ordered + " . sprintf('%d', $order->products[$i]['qty']) . " where products_id = '" . zen_get_prid($order->products[$i]['id']) . "'");
 
 //------insert customer choosen option to order--------
             $attributes_exist = '0';
@@ -1211,13 +1178,13 @@ class pcbillmate {
                                    and pa.options_values_id = poval.products_options_values_id
                                    and popt.language_id = '" . $languages_id . "'
                                    and poval.language_id = '" . $languages_id . "'";
-                        $attributes = tep_db_query($attributes_query);
+                        $attributes = $attributes_query;
                     } else {
-                        $attributes = tep_db_query("select popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix from " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval, " . TABLE_PRODUCTS_ATTRIBUTES . " pa where pa.products_id = '" . $order->products[$i]['id'] . "' and pa.options_id = '" . $order->products[$i]['attributes'][$j]['option_id'] . "' and pa.options_id = popt.products_options_id and pa.options_values_id = '" . $order->products[$i]['attributes'][$j]['value_id'] . "' and pa.options_values_id = poval.products_options_values_id and popt.language_id = '" . $languages_id . "' and poval.language_id = '" . $languages_id . "'");
+                        $attributes = "select popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix from " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval, " . TABLE_PRODUCTS_ATTRIBUTES . " pa where pa.products_id = '" . $order->products[$i]['id'] . "' and pa.options_id = '" . $order->products[$i]['attributes'][$j]['option_id'] . "' and pa.options_id = popt.products_options_id and pa.options_values_id = '" . $order->products[$i]['attributes'][$j]['value_id'] . "' and pa.options_values_id = poval.products_options_values_id and popt.language_id = '" . $languages_id . "' and poval.language_id = '" . $languages_id . "'";
                     }
-                    $attributes_values = tep_db_fetch_array($attributes);
+                    $attributes_values = $db->Execute($attributes);
 
-                    $products_ordered_attributes .= "\n\t" . $attributes_values['products_options_name'] . ' ' . $attributes_values['products_options_values_name'];
+                    $products_ordered_attributes .= "\n\t" . $attributes_values->fields['products_options_name'] . ' ' . $attributes_values->fields['products_options_values_name'];
                 }
             }
 
@@ -1231,7 +1198,7 @@ class pcbillmate {
             EMAIL_TEXT_DATE_ORDERED . ' ' . strftime(DATE_FORMAT_LONG) . "\n\n";
 
         if ($order->info['comments']) {
-            $email_order .= tep_db_output($order->info['comments']) . "\n\n";
+            $email_order .= zen_db_output($order->info['comments']) . "\n\n";
         }
 
         $email_order .= EMAIL_TEXT_PRODUCTS . "\n" .
@@ -1242,12 +1209,12 @@ class pcbillmate {
         if ($order->content_type != 'virtual') {
             $email_order .= "\n" . EMAIL_TEXT_DELIVERY_ADDRESS . "\n" .
                 EMAIL_SEPARATOR . "\n" .
-                tep_address_label($customer_id, $sendto, 0, '', "\n") . "\n";
+                zen_address_label($customer_id, $sendto, 0, '', "\n") . "\n";
         }
 
         $email_order .= "\n" . EMAIL_TEXT_BILLING_ADDRESS . "\n" .
             EMAIL_SEPARATOR . "\n" .
-            tep_address_label($customer_id, $billto, 0, '', "\n") . "\n\n";
+            zen_address_label($customer_id, $billto, 0, '', "\n") . "\n\n";
 
 
         if (is_object($payment)) {
@@ -1260,10 +1227,10 @@ class pcbillmate {
             }
         }
         if(!$already_completed ){
-            $languageCode = tep_db_fetch_array(tep_db_query("select code from languages where languages_id = " . $languages_id));
-            $languageCode['code']  = (strtolower($languageCode['code']) == 'se') ? 'sv' : $languageCode['code'];
+            $languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
+            $langCode  = (strtolower($languageCode->fields['code']) == 'se') ? 'sv' : $languageCode->fields['code'];
 
-            if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$languageCode['code']);
+            if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$langCode);
             if(!defined('BILLMATE_SERVER')) define('BILLMATE_SERVER','2.1.7');
 
             $k = new BillMate($eid,$secret,$ssl, $this->pcbillmate_testmode,$debug);
@@ -1271,13 +1238,13 @@ class pcbillmate {
         }
 
         if(is_string($result1) || (isset($result1->message) && is_object($result1))){
-            tep_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
+            zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
                 'payment_error=billmatecardpay&error='.$result1->message,
                 'SSL', true, false));
         } elseif($already_completed || is_object($result1)) {
             $billmatecard_called_api = true;
-            tep_session_register('billmatecard_called_api');
-            tep_session_register('billmatecard_api_result');
+            zen_session_register('billmatecard_called_api');
+            zen_session_register('billmatecard_api_result');
 
             // insert address in address book to get correct address in
             // confirmation mail (or fetch correct address from address book
@@ -1286,10 +1253,9 @@ class pcbillmate {
             $q = "select countries_id from " . TABLE_COUNTRIES .
                 " where countries_iso_code_2 = 'SE'";
 
-            $check_country_query = tep_db_query($q);
-            $check_country = tep_db_fetch_array($check_country_query);
+            $check_country = $db->Execute($q);
 
-            $cid = $check_country['countries_id'];
+            $cid = $check_country->fields['countries_id'];
 
             $q = "select address_book_id from " . TABLE_ADDRESS_BOOK .
                 " where customers_id = '" . (int)$customer_id .
@@ -1299,10 +1265,9 @@ class pcbillmate {
                 "' and entry_postcode = '" . $order->delivery['postcode'] .
                 "' and entry_city = '" . $order->delivery['city'] .
                 "' and entry_company = '" . $order->delivery['company'] . "'";
-            $check_address_query = tep_db_query($q);
-            $check_address = tep_db_fetch_array($check_address_query);
-            if(is_array($check_address) && count($check_address) > 0) {
-                $sendto = $billto = $check_address['address_book_id'];
+            $check_address = $db->Execute($q);
+            if($check_address->RecordCount() > 0) {
+                $sendto = $billto = $check_address->fields['address_book_id'];
             }else {
                 $sql_data_array =
                     array('customers_id' => $customer_id,
@@ -1314,20 +1279,20 @@ class pcbillmate {
                         'entry_city' => $order->delivery['city'],
                         'entry_country_id' => $cid);
 
-                tep_db_perform(TABLE_ADDRESS_BOOK, $sql_data_array);
-                $sendto = $billto = tep_db_insert_id();
+                $db->perform(TABLE_ADDRESS_BOOK, $sql_data_array);
+                $sendto = $billto = $db->InsertId();
             }
 
             if(!$already_completed){
                 $order->billmateref=$result1->number;
                 $payment['tan']=$result1->number;
             }
-            tep_session_unregister('pcbillmate_ot');
-            tep_mail($order->customer['firstname'] . ' ' . $order->customer['lastname'], $order->customer['email_address'], EMAIL_TEXT_SUBJECT, $email_order, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
-            tep_session_unregister('pcbillmate_ot');
+            zen_session_unregister('pcbillmate_ot');
+            zen_mail($order->customer['firstname'] . ' ' . $order->customer['lastname'], $order->customer['email_address'], EMAIL_TEXT_SUBJECT, $email_order, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
+            zen_session_unregister('pcbillmate_ot');
             // send emails to other people
             if (SEND_EXTRA_ORDER_EMAILS_TO != '') {
-                tep_mail('', SEND_EXTRA_ORDER_EMAILS_TO, EMAIL_TEXT_SUBJECT, $email_order, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
+                zen_mail('', SEND_EXTRA_ORDER_EMAILS_TO, EMAIL_TEXT_SUBJECT, $email_order, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
             }
             // Insert transaction # into history file
 
@@ -1337,7 +1302,7 @@ class pcbillmate {
                 'customer_notified' => 0,
                 'comments' => ('Billmate_IPN')
             );
-            tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+            $db->perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
 
             $sql_data_array = array('orders_id' => $_DATA['orderid'],
                 'orders_status_id' => MODULE_PAYMENT_PCBILLMATE_ORDER_STATUS_ID,
@@ -1345,8 +1310,8 @@ class pcbillmate {
                 'customer_notified' => 0,
                 'comments' => ('Accepted by Billmate ' . date("Y-m-d G:i:s") .' Invoice #: ' . $_DATA['number'])
             );
-            tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-            tep_db_query("update " . TABLE_ORDERS . " set orders_status = '" . (MODULE_PAYMENT_PCBILLMATE_ORDER_STATUS_ID ) . "', last_modified = now() where orders_id = '" . (int)$_DATA['orderid'] . "'");
+            $db->perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+            $db->Execute("update " . TABLE_ORDERS . " set orders_status = '" . (MODULE_PAYMENT_PCBILLMATE_ORDER_STATUS_ID ) . "', last_modified = now() where orders_id = '" . (int)$_DATA['orderid'] . "'");
 
 
             // load the after_process function from the payment modules
@@ -1355,40 +1320,40 @@ class pcbillmate {
             $cart->reset(true);
 
             // unregister session variables used during checkout
-            tep_session_unregister('sendto');
-            tep_session_unregister('billto');
-            tep_session_unregister('shipping');
-            tep_session_unregister('payment');
-            tep_session_unregister('comments');
+            zen_session_unregister('sendto');
+            zen_session_unregister('billto');
+            zen_session_unregister('shipping');
+            zen_session_unregister('payment');
+            zen_session_unregister('comments');
 
-            tep_session_unregister('cart_billmate_card_ID');
+            zen_session_unregister('cart_billmate_card_ID');
 
-            tep_redirect(tep_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL'));
+            zen_redirect(zen_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL'));
 
             return false;
         }
     }
 
     function after_process() {
-        global $insert_id, $order, $languages_id;
+        global $insert_id, $order, $languages_id,$db;
 
 
         //get response data
         $_DATA = json_decode($_REQUEST['data'], true);
         $_DATA['order_id'] = substr($_DATA['orderid'], strpos($_DATA['orderid'], '-')+1);
 
-        $find_st_optional_field_query =
-            tep_db_query("show columns from " . TABLE_ORDERS);
+        $fields = $db->Execute("show columns from " . TABLE_ORDERS);
 
         $has_billmatecardpay_ref = false;
 
-        while($fields = tep_db_fetch_array($find_st_optional_field_query)) {
-            if ( $fields['Field'] == "billmateref" )
+        while(!$fields->EOF) {
+            if ( $fields->fields['Field'] == "billmateref" )
                 $has_billmatecardpay_ref = true;
+            $fields->MoveNext();
         }
 
         if ($has_billmatecardpay_ref) {
-            tep_db_query("update " . TABLE_ORDERS . " set billmateref='" .
+            $db->Execute("update " . TABLE_ORDERS . " set billmateref='" .
                 $order->billmateref . "' " . " where orders_id = '" .
                 $_DATA['order_id'] . "'");
         }
@@ -1403,14 +1368,14 @@ class pcbillmate {
                     date("Y-m-d G:i:s") .
                     ' Invoice #: ' .
                     $order->billmateref));
-            tep_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+            $db->perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
 
-            tep_db_query("update " . TABLE_ORDERS . " set orders_status = '" . (MODULE_PAYMENT_PCBILLMATE_ORDER_STATUS_ID ) . "', last_modified = now() where orders_id = '" . (int)$_DATA['order_id'] . "'");
+            $db->Execute("update " . TABLE_ORDERS . " set orders_status = '" . (MODULE_PAYMENT_PCBILLMATE_ORDER_STATUS_ID ) . "', last_modified = now() where orders_id = '" . (int)$_DATA['order_id'] . "'");
         }
 
 
         //Delete Session with user details
-        tep_session_unregister('user_billing');
+        zen_session_unregister('user_billing');
         return false;
     }
 
@@ -1428,45 +1393,48 @@ class pcbillmate {
     }
 
     function check() {
+        global $db;
         if (!isset($this->_check)) {
-            $check_query = tep_db_query("select configuration_value from " .
+            $check_query = $db->Execute("select configuration_value from " .
                     TABLE_CONFIGURATION .
                     " where configuration_key = " .
                     "'MODULE_PAYMENT_PCBILLMATE_STATUS'");
-            $this->_check = tep_db_num_rows($check_query);
+            $this->_check = $check_query->RecordCount() > 0 ? true :false;
         }
         return $this->_check;
     }
 
     function install() {
-        tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Enable Billmate Module', 'MODULE_PAYMENT_PCBILLMATE_STATUS', 'True', 'Do you want to accept Billmate payments?', '6', '0', 'tep_cfg_select_option(array(\'True\', \'False\'), ', now())");
+        global $db;
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Enable Billmate Module', 'MODULE_PAYMENT_PCBILLMATE_STATUS', 'True', 'Do you want to accept Billmate payments?', '6', '0', 'tep_cfg_select_option(array(\'True\', \'False\'), ', now())");
 
-        tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Merchant ID', 'MODULE_PAYMENT_PCBILLMATE_EID', '0', 'Merchant ID (estore id) to use for the Billmate service (provided by Billmate)', '6', '0', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Merchant ID', 'MODULE_PAYMENT_PCBILLMATE_EID', '0', 'Merchant ID (estore id) to use for the Billmate service (provided by Billmate)', '6', '0', now())");
 
-        tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Shared secret', 'MODULE_PAYMENT_PCBILLMATE_SECRET', '', 'Shared secret to use with the Billmate service (provided by Billmate)', '6', '0', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Shared secret', 'MODULE_PAYMENT_PCBILLMATE_SECRET', '', 'Shared secret to use with the Billmate service (provided by Billmate)', '6', '0', now())");
 
-        tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Product artno attribute (id or model)', 'MODULE_PAYMENT_PCBILLMATE_ARTNO', 'id', 'Use the following product attribute for ArtNo.', '6', '2', 'tep_cfg_select_option(array(\'id\', \'model\'),', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Product artno attribute (id or model)', 'MODULE_PAYMENT_PCBILLMATE_ARTNO', 'id', 'Use the following product attribute for ArtNo.', '6', '2', 'tep_cfg_select_option(array(\'id\', \'model\'),', now())");
 
-        tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Ignore table', 'MODULE_PAYMENT_PCBILLMATE_ORDER_TOTAL_IGNORE', 'ot_tax,ot_total,ot_subtotal', 'Ignore these entries from order total list when compiling the invoice data', '6', '2', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Ignore table', 'MODULE_PAYMENT_PCBILLMATE_ORDER_TOTAL_IGNORE', 'ot_tax,ot_total,ot_subtotal', 'Ignore these entries from order total list when compiling the invoice data', '6', '2', now())");
 
-        tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Order value maximum limit', 'MODULE_PAYMENT_PCBILLMATE_ORDER_LIMIT', '50000', 'Only show this payment alternative for orders less than the value below.', '6', '2', now())");
-        tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Order value minimum limit', 'MODULE_PAYMENT_PCBILLMATE_MIN_ORDER_LIMIT', '0', 'Only show this payment alternative for orders greater than the value below.', '6', '2', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Order value maximum limit', 'MODULE_PAYMENT_PCBILLMATE_ORDER_LIMIT', '50000', 'Only show this payment alternative for orders less than the value below.', '6', '2', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Order value minimum limit', 'MODULE_PAYMENT_PCBILLMATE_MIN_ORDER_LIMIT', '0', 'Only show this payment alternative for orders greater than the value below.', '6', '2', now())");
 
-        tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Sort order of display.', 'MODULE_PAYMENT_PCBILLMATE_SORT_ORDER', '0', 'Sort order of display. Lowest is displayed first.', '6', '0', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Sort order of display.', 'MODULE_PAYMENT_PCBILLMATE_SORT_ORDER', '0', 'Sort order of display. Lowest is displayed first.', '6', '0', now())");
 
-        tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added) values ('Set Order Status', 'MODULE_PAYMENT_PCBILLMATE_ORDER_STATUS_ID', '0', 'Set the status of orders made with this payment module to this value', '6', '0', 'tep_cfg_pull_down_order_statuses(', 'tep_get_order_status_name', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added) values ('Set Order Status', 'MODULE_PAYMENT_PCBILLMATE_ORDER_STATUS_ID', '0', 'Set the status of orders made with this payment module to this value', '6', '0', 'tep_cfg_pull_down_order_statuses(', 'tep_get_order_status_name', now())");
 
-        tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Set database table for campaigns', 'MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE', 'osc_billmate_se_pclasses', 'A unused table to store pclasses in, e.g. \"osc_billmate_se_pclasses\"', '6', '7', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Set database table for campaigns', 'MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE', 'osc_billmate_se_pclasses', 'A unused table to store pclasses in, e.g. \"osc_billmate_se_pclasses\"', '6', '7', now())");
 
-        tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Testmode', 'MODULE_PAYMENT_PCBILLMATE_TESTMODE', 'False', 'Do you want to activate the Testmode? We will not pay for the invoices created with the test persons nor companies and we will not collect any fees as well.', '6', '0', 'tep_cfg_select_option(array(\'True\', \'False\'), ', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Testmode', 'MODULE_PAYMENT_PCBILLMATE_TESTMODE', 'False', 'Do you want to activate the Testmode? We will not pay for the invoices created with the test persons nor companies and we will not collect any fees as well.', '6', '0', 'tep_cfg_select_option(array(\'True\', \'False\'), ', now())");
 
-        tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Countries', 'MODULE_PAYMENT_PCBILLMATE_ENABLED_COUNTRYIES', 'se,fi,dk,no', 'Available in selected countries<br/>se = Sweden<br/>fi = Finland<br/>dk = Denmark<br/>no = Norway', '6', '0', now())");
+        $db->Execute("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Countries', 'MODULE_PAYMENT_PCBILLMATE_ENABLED_COUNTRYIES', 'se,fi,dk,no', 'Available in selected countries<br/>se = Sweden<br/>fi = Finland<br/>dk = Denmark<br/>no = Norway', '6', '0', now())");
         
     }
 
     function remove() {
+        global $db;
         require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
-        tep_db_query("delete from " . TABLE_CONFIGURATION . " where configuration_key in ('" . implode("', '", $this->keys()) . "')");
+        $db->Execute("delete from " . TABLE_CONFIGURATION . " where configuration_key in ('" . implode("', '", $this->keys()) . "')");
         BillmateUtils::remove_db(MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE);
     }
 
@@ -1476,7 +1444,7 @@ class pcbillmate {
     }
 
     function keys() {
-        global $pcbillmate_testmode;
+        global $pcbillmate_testmode,$db;
 
         //Set the right Host and Port
         $livemode = $this->pcbillmate_testmode == false;
@@ -1490,23 +1458,24 @@ class pcbillmate {
                 $secret = MODULE_PAYMENT_PCBILLMATE_SECRET;
 
                 $result = false;
-            $langs = tep_db_query("select code from languages");
-            while($lang = tep_db_fetch_array($langs)) {
-                $lang['code'] = ($lang['code'] == 'se') ? 'sv' : $lang['code'];
-                if (in_array($lang['code'], array('sv', 'en'))) {
+            $lang = $db->Execute("select code from languages");
+            while(!$lang->EOF) {
+                $lang->fields['code'] = ($lang->fields['code'] == 'se') ? 'sv' : $lang->fields['code'];
+                if (in_array($lang->fields['code'], array('sv', 'en'))) {
                     $additionalinfo['PaymentData'] = array(
                         "currency" => 'SEK',//SEK
                         "country" => 'se',//Sweden
-                        "language" => $lang['code'],//Swedish
+                        "language" => $lang->fields['code'],//Swedish
                     );
                     $k = new BillMate($eid, $secret, true, $this->pcbillmate_testmode, false);
                     $result = $k->GetPaymentPlans($additionalinfo);
 
                     BillmateUtils::update_pclasses(MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, $result,$lang['code']);
                 }
+                $lang->MoveNext();
             }
                 
-                BillmateUtils::display_pclasses(MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, $KRED_ISO3166_SE);
+                BillmateUtils::display_pclasses(MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, 'SE');
 
         }
 
