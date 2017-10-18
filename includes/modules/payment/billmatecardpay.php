@@ -41,7 +41,7 @@ class billmatecardpay {
     var $code, $title, $description, $enabled, $billmatecardpay_livemode, $billmatecardpay_testmode, $jQuery, $form_action_url;
 
     // class constructor
-    function billmatecardpay() {
+    function __construct() {
         global $order, $currency, $currencies, $customer_id, $customer_country_id, $billmatecardpay_livemode, $billmatecardpay_testmode,$db;
         $this->jQuery = true;
         $this->code = 'billmatecardpay';

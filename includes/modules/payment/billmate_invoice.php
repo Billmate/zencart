@@ -39,7 +39,7 @@ class billmate_invoice {
     var $code, $title, $description, $enabled, $billmate_livemode, $billmate_testmode, $jQuery;
 
     // class constructor
-    function billmate_invoice() {
+    function __construct() {
         global $order, $currency, $currencies, $customer_id, $customer_country_id, $billmate_livemode, $billmate_testmode,$db;
         $this->jQuery = true;
         $this->code = 'billmate_invoice';
@@ -1398,7 +1398,7 @@ class billmate_invoice {
                     TABLE_CONFIGURATION .
                     " where configuration_key = " .
                     "'MODULE_PAYMENT_BILLMATE_STATUS'");
-            $this->_check = ($check_query->RecordCount() > 0) ? true : false;
+            $this->_check = (!$check_query->EOF) ? true : false;
         }
         return $this->_check;
     }

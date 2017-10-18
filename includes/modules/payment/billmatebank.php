@@ -11,7 +11,7 @@ class billmatebank {
     var $code, $title, $description, $enabled, $billmatebank_livemode, $billmatebank_testmode, $jQuery, $form_action_url;
 
     // class constructor
-    function billmatebank() {
+    function __construct() {
         global $order, $currency, $currencies, $customer_id, $customer_country_id, $billmatebank_livemode, $billmatebank_testmode, $db;
         $this->jQuery = true;
         $this->code = 'billmatebank';

@@ -41,7 +41,7 @@ class pcbillmate {
     var $ma_minimum = 50;
 
     // class constructor
-    function pcbillmate() {
+    function __construct() {
         global $order, $currency, $cart, $currencies, $customer_id, $customer_country_id, $pcbillmate_testmode,$db;
         $this->jQuery = true;
         $this->code = 'pcbillmate';
