@@ -1398,7 +1398,7 @@ class billmate_invoice {
                     TABLE_CONFIGURATION .
                     " where configuration_key = " .
                     "'MODULE_PAYMENT_BILLMATE_STATUS'");
-            $this->_check = ($db->RecordCount() > 0) ? true : false;
+            $this->_check = ($check_query->RecordCount() > 0) ? true : false;
         }
         return $this->_check;
     }

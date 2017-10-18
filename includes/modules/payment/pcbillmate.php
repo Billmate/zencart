@@ -1470,7 +1470,7 @@ class pcbillmate {
                     $k = new BillMate($eid, $secret, true, $this->pcbillmate_testmode, false);
                     $result = $k->GetPaymentPlans($additionalinfo);
 
-                    BillmateUtils::update_pclasses(MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, $result,$lang['code']);
+                    BillmateUtils::update_pclasses(MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, $result,$lang->fields['code']);
                 }
                 $lang->MoveNext();
             }
