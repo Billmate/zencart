@@ -92,29 +92,30 @@ class billmatecardpay {
                                  )
                               );
 
-        if (!in_array(strtoupper($currency),$currencyValid)) {
-            $this->enabled = false;
-        }
-        else {
-            if(is_array($billing)) {
-                if(in_array($billing['country']['iso_code_2'],$disabled_countries)) {
-                    $this->enabled = false;
-                }
-            }
-            else {
-                $result = $db->Execute("SELECT countries_iso_code_2 FROM countries WHERE countries_id = " . (int)$_SESSION['customer_country_id']);
+	    if (!in_array(strtoupper($_SESSION['currency']),$currencyValid)) {
+		    $this->enabled = false;
+	    }
+	    else {
+		    if(is_array($_SESSION['billing'])) {
+			    if(!in_array(strtolower($_SESSION['billing']['country']['iso_code_2']),$disabled_countries)) {
+				    $this->enabled = false;
+			    }
+		    }
+		    else {
+			    $result = $db->Execute("SELECT countries_iso_code_2 FROM countries WHERE countries_id = " . (int)$_SESSION['customer_country_id']);
 
-                if($result->RecordCount() > 0) {
-                    if(in_array($result->fields['countries_iso_code_2'],$disabled_countries)) {
-                        $this->enabled = false;
-                    }
-                    $this->enabled = $this->enabled && !in_array($result->fields['countries_iso_code_2'],$disabled_countries);
-                }
-                else {
-                    $this->enabled = false;
-                }
-            }
-        }
+
+			    if(!$result->EOF) {
+				    if(!in_array(strtolower($result->fields['countries_iso_code_2']),$countryValid)) {
+					    $this->enabled = false;
+				    }
+				    $this->enabled = $this->enabled && !in_array(strtolower($result->fields['countries_iso_code_2']),$disabled_countries);
+			    }
+			    else {
+				    $this->enabled = false;
+			    }
+		    }
+	    }
         
     
         if(is_object($currencies)) {
@@ -179,8 +180,8 @@ class billmatecardpay {
 
         require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
 		
-        if (zen_session_is_registered('cart_billmate_card_ID')) {
-			$order_id = $insert_id = $cart_billmate_card_ID;
+        if (isset($_SESSION['cart_billmate_card_ID'])) {
+			$order_id = $insert_id = $_SESSION['cart_billmate_card_ID'];
 
 			$check_query = $db->Execute('select orders_id from ' . TABLE_ORDERS_STATUS_HISTORY . ' where orders_id = "' . (int)$order_id . '" limit 1');
 
@@ -242,8 +243,8 @@ class billmatecardpay {
 
     function confirmation() {
 		global $cartID, $cart_billmate_card_ID, $customer_id, $languages_id, $order, $order_total_modules, $currencies,$db;
-        if (zen_session_is_registered('cart_billmate_card_ID')) {
-          $order_id = $cart_billmate_card_ID;
+        if (isset($_SESSION['cart_billmate_card_ID'])) {
+          $order_id = $_SESSION['cart_billmate_card_ID'];
 
           $curr = $db->Execute("select currency from " . TABLE_ORDERS . " where orders_id = '" . (int)$order_id . "'");
 

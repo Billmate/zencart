@@ -82,20 +82,21 @@ class billmate_invoice {
                                  )
                               );
 		$availablecountries = array_intersect($countryValid,$enabled_countries);
-        if (!in_array(strtoupper($currency),$currencyValid)) {
+
+        if (!in_array(strtoupper($_SESSION['currency']),$currencyValid)) {
             $this->enabled = false;
         }
         else {
-            if(is_array($billing)) {
-                if(!in_array(strtolower($billing['country']['iso_code_2']),$availablecountries)) {
+            if(is_array($_SESSION['billing'])) {
+                if(!in_array(strtolower($_SESSION['billing']['country']['iso_code_2']),$availablecountries)) {
                     $this->enabled = false;
                 }
             }
             else {
                 $result = $db->Execute("SELECT countries_iso_code_2 FROM countries WHERE countries_id = " . (int)$_SESSION['customer_country_id']);
 
-        
-                if(is_array($result)) {
+
+                if(!$result->EOF) {
                     if(!in_array(strtolower($result->fields['countries_iso_code_2']),$countryValid)) {
                         $this->enabled = false;
                     }
@@ -106,8 +107,9 @@ class billmate_invoice {
                 }
             }
         }
-        
-        
+
+
+
         if(is_object($currencies)) {
             $er = $currencies->get_value($currency);
         }
@@ -207,8 +209,8 @@ class billmate_invoice {
 
         require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
 
-        if (zen_session_is_registered('cart_billmate_card_ID')) {
-            $order_id = $insert_id = $cart_billmate_card_ID;
+        if (isset($_SESSION['cart_billmate_card_ID'])) {
+            $order_id = $insert_id = $_SESSION['cart_billmate_card_ID'];
 
             $check_query = $db->Execute('select orders_id from ' . TABLE_ORDERS_STATUS_HISTORY . ' where orders_id = "' . (int)$order_id . '" limit 1');
 
@@ -224,7 +226,7 @@ class billmate_invoice {
             }
         }
         
-        $fields = $db->Exevute("show columns from " . TABLE_CUSTOMERS);
+        $fields = $db->Execute("show columns from " . TABLE_CUSTOMERS);
 
         $has_personnummer = false;
         $has_dob = false;
@@ -285,7 +287,7 @@ class billmate_invoice {
             $popup = $_SESSION['WrongAddress'];
         }
 
-        $languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
+        $languageCode = $db->Execute("select code from languages where languages_id = " . $_SESSION['languages_id']);
         $langCode = '';
         while(!$languageCode->EOF) {
             if (!in_array($languageCode->fields['code'], array('sv', 'en', 'se'))) {
@@ -520,8 +522,8 @@ class billmate_invoice {
     function confirmation() {
         global $cartID, $cart_billmate_card_ID, $customer_id, $languages_id, $order, $order_total_modules, $currencies,$db;
 
-        if (zen_session_is_registered('cart_billmate_card_ID')) {
-            $order_id = $cart_billmate_card_ID;
+        if (isset($_SESSION['cart_billmate_card_ID'])) {
+            $order_id = $_SESSION['cart_billmate_card_ID'];
 
             $curr = $db->Execute("select currency from " . TABLE_ORDERS . " where orders_id = '" . (int)$order_id . "'");
 
@@ -994,8 +996,8 @@ class billmate_invoice {
 
         if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$langCode);
         if(!defined('BILLMATE_SERVER')) define('BILLMATE_SERVER','2.1.7');
-        if(zen_session_is_registered('billmate_pno')){
-            $pno = $billmate_pno;
+        if(isset($_SESSION['billmate_pno'])){
+            $pno = $_SESSION['billmate_pno'];
         }
 
         $k = new BillMate($eid,$secret,$ssl,$this->billmate_testmode,$debug,$codes);

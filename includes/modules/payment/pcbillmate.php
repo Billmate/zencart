@@ -88,29 +88,30 @@ class pcbillmate {
 			$billing = $_SESSION['billmate_billing'] = $order->billing;
 		}
 		$availablecountries = array_intersect($countryValid,$enabled_countries);
-        if (!in_array(strtoupper($currency),$currencyValid)) {
+        if (!in_array(strtoupper($_SESSION['currency']),$currencyValid)) {
             $this->enabled = false;
         }
         else {
-            if(!empty($billing) && is_array($billing)) {
-                if(!in_array(strtoupper($billing['country']['iso_code_2']),$availablecountries)) {
+            if(is_array($_SESSION['billing'])) {
+                if(!in_array(strtolower($_SESSION['billing']['country']['iso_code_2']),$availablecountries)) {
                     $this->enabled = false;
                 }
             }
             else {
                 $result = $db->Execute("SELECT countries_iso_code_2 FROM countries WHERE countries_id = " . (int)$_SESSION['customer_country_id']);
 
-                if($result->RecordCount() > 0) {
-                    if(!in_array(strtoupper($result->fields['countries_iso_code_2']),$countryValid)) {
+
+                if(!$result->EOF) {
+                    if(!in_array(strtolower($result->fields['countries_iso_code_2']),$countryValid)) {
                         $this->enabled = false;
                     }
-                    $this->enabled = $this->enabled && in_array(strtoupper($result->fields['countries_iso_code_2']),$enabled_countries);
+                    $this->enabled = $this->enabled && in_array(strtolower($result->fields['countries_iso_code_2']),$enabled_countries);
                 }
                 else {
                     $this->enabled = false;
                 }
             }
-        }    
+        }
 		
         if(is_object($currencies)) {
             $er = $currencies->get_value($currency);
@@ -211,8 +212,8 @@ class pcbillmate {
         $eid = MODULE_PAYMENT_PCBILLMATE_EID;
         $secret = MODULE_PAYMENT_PCBILLMATE_SECRET;
 
-        if (zen_session_is_registered('cart_billmate_card_ID')) {
-            $order_id = $insert_id = $cart_billmate_card_ID;
+        if (isset($_SESSION['cart_billmate_card_ID'])) {
+            $order_id = $insert_id = $_SESSION['cart_billmate_card_ID'];
 
             $check_query = $db->Execute('select orders_id from ' . TABLE_ORDERS_STATUS_HISTORY . ' where orders_id = "' . (int)$order_id . '" limit 1');
 
@@ -539,8 +540,8 @@ class pcbillmate {
     function confirmation() {
         global $cartID, $cart_billmate_card_ID, $customer_id, $languages_id, $order, $order_total_modules, $currencies, $db;
 
-        if (zen_session_is_registered('cart_billmate_card_ID')) {
-            $order_id = $cart_billmate_card_ID;
+        if (isset($_SESSION['cart_billmate_card_ID'])) {
+            $order_id = $_SESSION['cart_billmate_card_ID'];
 
             $curr = $db->Execute("select currency from " . TABLE_ORDERS . " where orders_id = '" . (int)$order_id . "'");
 
@@ -1000,8 +1001,8 @@ class pcbillmate {
 
         if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$langCode);
         if(!defined('BILLMATE_SERVER')) define('BILLMATE_SERVER','2.1.7');
-        if(zen_session_is_registered('billmate_pno')){
-            $pno = $billmate_pno;
+        if(isset($_SESSION['billmate_pno'])){
+            $pno = $_SESSION['billmate_pno'];
         }
 
         $k = new BillMate($eid,$secret,$ssl,$this->pcbillmate_testmode,$debug,$codes);

@@ -201,8 +201,8 @@ function partpay($order_id){
     }
     if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$langCode);
     if(!defined('BILLMATE_SERVER')) define('BILLMATE_SERVER','2.1.7');
-    if(zen_session_is_registered('billmate_pno')){
-        $pno = $billmate_pno;
+    if(isset($_SESSION['billmate_pno'])){
+        $pno = $_SESSION['billmate_pno'];
     }
 
     $k = new BillMate($eid,$secret,$ssl,$testmode,$debug,$codes);
@@ -484,8 +484,8 @@ function invoice($order_id){
 
     if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$langCode);
     if(!defined('BILLMATE_SERVER')) define('BILLMATE_SERVER','2.1.7');
-    if(zen_session_is_registered('billmate_pno')){
-        $pno = $billmate_pno;
+    if(isset($_SESSION['billmate_pno'])){
+        $pno = $_SESSION['billmate_pno'];
     }
     $testmode = false;
     if ((MODULE_PAYMENT_BILLMATE_TESTMODE == 'True')) {
