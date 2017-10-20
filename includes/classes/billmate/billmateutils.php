@@ -68,14 +68,32 @@ function billmate_remove_order($order_id, $restock = false) {
     $db->Execute("delete from " . TABLE_ORDERS_STATUS_HISTORY . " where orders_id = '" . (int)$order_id . "'");
     $db->Execute("delete from " . TABLE_ORDERS_TOTAL . " where orders_id = '" . (int)$order_id . "'");
 }
+
+function prepare_sql_array($arr){
+    $output = array();
+    $i = 0;
+    foreach ($arr as $key => $value){
+        $output[$i] = array('fieldName' => $key, 'value' => $value);
+        $i++;
+    }
+    return $output;
+}
 /**
  *
  */
 class BillmateUtils {
 
+
+
+    public static function get_display_jQuery($code)
+    {
+        return "<script type=\"text/javascript\" src='".HTTP_SERVER."/billmatepopup.js'></script>";
+    }
+
     /**
      *
      */
+    /*
     public static function get_display_jQuery($code) {
         return "<script type=\"text/javascript\" src='".HTTP_SERVER."/billmatepopup.js'></script><script type='text/javascript'>
                 if(typeof jQuery != 'undefined')
@@ -133,6 +151,7 @@ class BillmateUtils {
                 });
             </script>";
     }
+    */
 
     /**
      * @param  array  $pclasses

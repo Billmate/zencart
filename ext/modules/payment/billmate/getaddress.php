@@ -6,13 +6,16 @@
  * Time: 13:28
  */
 ini_set('display_errors',1);
+error_reporting(E_ALL);
 global $user_billing, $language, $languages_id,$db;
 	chdir('../../../../');
 	require('includes/application_top.php');
 	require(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/Billmate.php');
 	require(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/utf8.php');
+	require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
 
-	require(DIR_WS_CLASSES . 'order.php');
+
+require(DIR_WS_CLASSES . 'order.php');
 	// load the language file according to set language.
 	include(DIR_WS_LANGUAGES . $language . '/modules/payment/billmate_invoice.php');
 	$order = new order;
@@ -34,8 +37,8 @@ global $user_billing, $language, $languages_id,$db;
 
 
 
-	$languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
-	if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$languageCode['code']);
+	$languageCode = $db->Execute("select code from languages where languages_id = " . $_SESSION['languages_id']);
+	if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$languageCode->fields['code']);
 
 	$billmate = new BillMate($eid,$secret,true,$testmode,false);
 	$address = $billmate->getAddress(array('pno' => $_POST[$method.'_pnum']));
@@ -46,7 +49,7 @@ global $user_billing, $language, $languages_id,$db;
 	$user_billing[$method.'_email'] = $_POST[$method.'_email'];
 	$user_billing[$method.'_invoice_type'] = $_POST[$method.'_invoice_type'];
 
-	zen_session_register('user_billing');
+	$_SESSION['user_billing'] = $user_billing;
 
 	if (isset($address['code']) || empty($address) || !is_array($address))
 		die(json_encode(array('success' => false, 'content' => utf8_encode($address['message']),'popup' => false)));

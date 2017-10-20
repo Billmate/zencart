@@ -479,7 +479,7 @@ function invoice($order_id){
     $ssl = true;
     $debug = false;
     $testmode =
-    $languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
+    $languageCode = $db->Execute("select code from languages where languages_id = " . $_SESSION['languages_id']);
     $langCode  = (strtolower($languageCode->fields['code']) == 'se') ? 'sv' : $languageCode->fields['code'];
 
     if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$langCode);
@@ -574,7 +574,8 @@ switch($_GET['method']){
 
 function getOrder($order_id){
     global $db;
-    global $languages_id;
+    
+    $languages_id = $_SESSION['languages_id'];
     $toReturn = new stdClass();
     $order = $db->Execute("select customers_id, customers_name, customers_company, customers_street_address, customers_suburb, customers_city, customers_postcode, customers_state, customers_country, customers_telephone, customers_email_address, customers_address_format_id, delivery_name, delivery_company, delivery_street_address, delivery_suburb, delivery_city, delivery_postcode, delivery_state, delivery_country, delivery_address_format_id, billing_name, billing_company, billing_street_address, billing_suburb, billing_city, billing_postcode, billing_state, billing_country, billing_address_format_id, payment_method, cc_type, cc_owner, cc_number, cc_expires, currency, currency_value, date_purchased, orders_status, last_modified from " . TABLE_ORDERS . " where orders_id = '" . (int)$order_id . "'");
 

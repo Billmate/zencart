@@ -193,7 +193,7 @@ class billmatecardpay {
 			  $db->Execute('delete from ' . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . ' where orders_id = "' . (int)$order_id . '"');
 			  $db->Execute('delete from ' . TABLE_ORDERS_PRODUCTS_DOWNLOAD . ' where orders_id = "' . (int)$order_id . '"');
 
-			  zen_session_unregister('cart_billmate_card_ID');
+				unset($_SESSION['cart_billmate_card_ID']);
 			}
 		}
 
@@ -237,13 +237,15 @@ class billmatecardpay {
     function pre_confirmation_check() {
         global $billmatecardpay_testmode, $billmatecardpay_livemode, $order, $GA_OLD, $KRED_SE_PNO, $user_billing;
         //Store values into Session
-        zen_session_register('user_billing');
+       
 
     }
 
     function confirmation() {
 		global $cartID, $cart_billmate_card_ID, $customer_id, $languages_id, $order, $order_total_modules, $currencies,$db;
-        if (isset($_SESSION['cart_billmate_card_ID'])) {
+	    require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
+
+	    if (isset($_SESSION['cart_billmate_card_ID'])) {
           $order_id = $_SESSION['cart_billmate_card_ID'];
 
           $curr = $db->Execute("select currency from " . TABLE_ORDERS . " where orders_id = '" . (int)$order_id . "'");
@@ -337,9 +339,9 @@ class billmatecardpay {
                                   'currency' => $order->info['currency'],
                                   'currency_value' => $order->info['currency_value']);
 
-          $db->perform(TABLE_ORDERS, $sql_data_array);
+          zen_db_perform(TABLE_ORDERS, $sql_data_array);
 
-          $insert_id = $db->InsertId();
+          $insert_id = $db->Insert_ID();
 
           for ($i=0, $n=sizeof($order_totals); $i<$n; $i++) {
             $sql_data_array = array('orders_id' => $insert_id,
@@ -349,7 +351,7 @@ class billmatecardpay {
                                     'class' => $order_totals[$i]['code'],
                                     'sort_order' => $order_totals[$i]['sort_order']);
 
-            $db->perform(TABLE_ORDERS_TOTAL, $sql_data_array);
+            zen_db_perform(TABLE_ORDERS_TOTAL, $sql_data_array);
           }
 
 		  $customer_notification = (SEND_EMAILS == 'true') ? '1' : '0';
@@ -358,7 +360,7 @@ class billmatecardpay {
 								  'date_added' => 'now()', 
 								  'customer_notified' => $customer_notification,
 								  'comments' => $order->info['comments']);
-		  $db->perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+		  zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
 
           for ($i=0, $n=sizeof($order->products); $i<$n; $i++) {
             $sql_data_array = array('orders_id' => $insert_id,
@@ -370,9 +372,9 @@ class billmatecardpay {
                                     'products_tax' => $order->products[$i]['tax'],
                                     'products_quantity' => $order->products[$i]['qty']);
 
-            $db->perform(TABLE_ORDERS_PRODUCTS, $sql_data_array);
+            zen_db_perform(TABLE_ORDERS_PRODUCTS, $sql_data_array);
 
-            $order_products_id = $db->InsertId();
+            $order_products_id = $db->Insert_ID();
 
             $attributes_exist = '0';
             if (isset($order->products[$i]['attributes'])) {
@@ -403,7 +405,7 @@ class billmatecardpay {
                                         'options_values_price' => $attributes_values->fields['options_values_price'],
                                         'price_prefix' => $attributes_values->fields['price_prefix']);
 
-                $db->perform(TABLE_ORDERS_PRODUCTS_ATTRIBUTES, $sql_data_array);
+                zen_db_perform(TABLE_ORDERS_PRODUCTS_ATTRIBUTES, $sql_data_array);
 
                 if ((DOWNLOAD_ENABLED == 'true') && isset($attributes_values->fields['products_attributes_filename']) && zen_not_null($attributes_values->fields['products_attributes_filename'])) {
                   $sql_data_array = array('orders_id' => $insert_id,
@@ -412,14 +414,13 @@ class billmatecardpay {
                                           'download_maxdays' => $attributes_values->fields['products_attributes_maxdays'],
                                           'download_count' => $attributes_values->fields['products_attributes_maxcount']);
 
-                  $db->perform(TABLE_ORDERS_PRODUCTS_DOWNLOAD, $sql_data_array);
+                  zen_db_perform(TABLE_ORDERS_PRODUCTS_DOWNLOAD, $sql_data_array);
                 }
               }
             }
           }
 
-          $cart_billmate_card_ID =  $insert_id;
-          zen_session_register('cart_billmate_card_ID');
+          $_SESSION['cart_billmate_card_ID'] = $cart_billmate_card_ID =  $insert_id;
         }
         return array('title' => MODULE_PAYMENT_BILLMATECARDPAY_TEXT_CONFIRM_DESCRIPTION);
     }
@@ -440,8 +441,8 @@ class billmatecardpay {
 		$languageCode = $languageCode == 'SE' ? 'SV' : $languageCode;
 		$languageCode = $languageCode == 'EN' ? 'GB' : $languageCode;
 
-		zen_session_unregister('billmatecard_called_api');
-		zen_session_unregister('billmatecard_api_result');
+		unset($_SESSION['billmatecard_called_api']);
+		unset($_SESSION['billmatecard_api_result']);
 		
         $order_totals = $order_total_modules->modules;
 
@@ -502,8 +503,7 @@ class billmatecardpay {
             }
             $billmatecardpay_ot['code_entries'] = $j;
         }
-
-        zen_session_register('billmatecardpay_ot');
+		$_SESSION['billmatecardpay_ot'] = $billmatecardpay_ot;
 		$return = $this->doInvoice();
 		$redirect = $return->url;
 
@@ -531,7 +531,7 @@ class billmatecardpay {
 
 		$billmatecardpay_ot = $_SESSION['billmatecardpay_ot'];
         $livemode = $this->billmatecardpay_livemode;
-		require(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
+		require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
 		if( empty($_POST ) ) $_POST = $_GET;
         //Set the right Host and Port
 
@@ -691,7 +691,7 @@ class billmatecardpay {
    
 		$ssl = true;
 		$debug = false;
-		$languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
+		$languageCode = $db->Execute("select code from languages where languages_id = " . $_SESSION['languages_id']);
         $langCode  = (strtolower($languageCode->fields['code']) == 'se') ? 'sv' : $languageCode->fields['code'];
 
         if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$langCode);
@@ -699,13 +699,13 @@ class billmatecardpay {
 
         $k = new BillMate($eid,$secret,$ssl,$this->billmatecardpay_testmode,$debug,$codes);
 		$invoiceValues = array();
-        $lang = $languageCode['code'] == 'se' ? 'sv' : $languageCode['code'];
+        $lang = $languageCode->fields['code'] == 'se' ? 'sv' : $languageCode->fields['code'];
 		$invoiceValues['PaymentData'] = array(	"method" => "8",		//1=Factoring, 2=Service, 4=PartPayment, 8=Card, 16=Bank, 24=Card/bank and 32=Cash.
-												"currency" => $currency, //"SEK",
+												"currency" => $_SESSION['currency'], //"SEK",
 												"language" => $lang,
 												"country" => "SE",
 												"autoactivate" => (MODULE_PAYMENT_BILLMATECARDPAY_AUTHENTICATION_MODE == 'sale')?1:0,
-												"orderid" => (string)$cart_billmate_card_ID,
+												"orderid" => (string)$_SESSION['cart_billmate_card_ID'],
 											);
 		$invoiceValues['PaymentInfo'] = array( 	"paymentdate" => date('Y-m-d'),
 												"paymentterms" => "14",
@@ -720,7 +720,7 @@ class billmatecardpay {
 											"recurring" => "",
 											"recurringnr" => "",
 											"accepturl" => zen_href_link(FILENAME_CHECKOUT_PROCESS, '', 'SSL'),
-											"cancelurl" => zen_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL').'?cancel=true&payment_error=billmatecardpay&error='.rawurlencode(MODULE_PAYMENT_BILLMATECARDPAY_CANCEL),
+											"cancelurl" => zen_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL').'?cancel=true&payment_error=billmatecardpay&error_message='.rawurlencode(MODULE_PAYMENT_BILLMATECARDPAY_CANCEL),
 											"callbackurl" => zen_href_link('ext/modules/payment/billmate/cardpay_ipn.php', '', 'SSL'), //'http://api.billmate.se/callback.php',
 									);
 		$invoiceValues['Customer'] = array(	'customernr'=> (string)$customer_id,
@@ -771,7 +771,7 @@ class billmatecardpay {
 			   $billmatecardpay_ot, $billmatecardpay_livemode, $billmatecardpay_testmode,$insert_id, $cart_billmate_card_ID,$payment
                ,$cartID, $cart,$order_id, $languages_id, $language_id, $language, $currency,$db;
 
-		require(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
+		require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
 		$order_id = $cart_billmate_card_ID;
 
 		//get response data
@@ -791,13 +791,12 @@ class billmatecardpay {
 
 		if( $status_history_a->RecordCount() > 0 ){
 			$already_completed = true;
-			zen_session_register('already_completed');
-			zen_session_unregister('billmatecardpay_ot');
-            
+			unset($_SESSION['billmatecardpay_ot']);
+
         }else {
 			$already_completed = false;
-			zen_session_register('already_completed');
 		}
+	    $_SESSION['already_completed'] = $already_completed;
         $products_ordered = '';
         $subtotal = 0;
         $total_tax = 0;
@@ -838,7 +837,7 @@ class billmatecardpay {
             }
 
 // Update products_ordered (for bestsellers list)
-            $db->query("update " . TABLE_PRODUCTS . " set products_ordered = products_ordered + " . sprintf('%d', $order->products[$i]['qty']) . " where products_id = '" . zen_get_prid($order->products[$i]['id']) . "'");
+            $db->Execute("update " . TABLE_PRODUCTS . " set products_ordered = products_ordered + " . sprintf('%d', $order->products[$i]['qty']) . " where products_id = '" . zen_get_prid($order->products[$i]['id']) . "'");
 
 //------insert customer choosen option to order--------
             $attributes_exist = '0';
@@ -856,11 +855,11 @@ class billmatecardpay {
                                    and pa.options_id = popt.products_options_id
                                    and pa.options_values_id = '" . $order->products[$i]['attributes'][$j]['value_id'] . "'
                                    and pa.options_values_id = poval.products_options_values_id
-                                   and popt.language_id = '" . $languages_id . "'
-                                   and poval.language_id = '" . $languages_id . "'";
+                                   and popt.language_id = '" . $_SESSION['languages_id'] . "'
+                                   and poval.language_id = '" . $_SESSION['languages_id'] . "'";
                         $attributes = $attributes_query;
                     } else {
-                        $attributes = "select popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix from " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval, " . TABLE_PRODUCTS_ATTRIBUTES . " pa where pa.products_id = '" . $order->products[$i]['id'] . "' and pa.options_id = '" . $order->products[$i]['attributes'][$j]['option_id'] . "' and pa.options_id = popt.products_options_id and pa.options_values_id = '" . $order->products[$i]['attributes'][$j]['value_id'] . "' and pa.options_values_id = poval.products_options_values_id and popt.language_id = '" . $languages_id . "' and poval.language_id = '" . $languages_id . "'";
+                        $attributes = "select popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix from " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval, " . TABLE_PRODUCTS_ATTRIBUTES . " pa where pa.products_id = '" . $order->products[$i]['id'] . "' and pa.options_id = '" . $order->products[$i]['attributes'][$j]['option_id'] . "' and pa.options_id = popt.products_options_id and pa.options_values_id = '" . $order->products[$i]['attributes'][$j]['value_id'] . "' and pa.options_values_id = poval.products_options_values_id and popt.language_id = '" . $_SESSION['languages_id'] . "' and poval.language_id = '" . $_SESSION['languages_id'] . "'";
                     }
                     $attributes_values = $db->Execute($attributes);
 
@@ -916,7 +915,7 @@ class billmatecardpay {
 
 		if( (MODULE_PAYMENT_BILLMATECARDPAY_AUTHENTICATION_MODE != 'sale') ) {
 			if(!$already_completed ){
-				$languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
+				$languageCode = $db->Execute("select code from languages where languages_id = " . $_SESSION['languages_id']);
                 $langCode  = (strtolower($languageCode->fields['code']) == 'se') ? 'sv' : $languageCode->fields['code'];
 
                 if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$langCode);
@@ -934,8 +933,8 @@ class billmatecardpay {
                     'SSL', true, false));
 		} elseif($already_completed || is_object($result1)) {
 			$billmatecard_called_api = true;
-			zen_session_register('billmatecard_called_api');
-			zen_session_register('billmatecard_api_result');
+	        $_SESSION['billmatecard_called_api'] = $billmatecard_called_api;
+	        $_SESSION['billmatecard_api_result'] = $result1;
 
             // insert address in address book to get correct address in
             // confirmation mail (or fetch correct address from address book
@@ -970,17 +969,16 @@ class billmatecardpay {
                         'entry_city' => $order->delivery['city'],
                         'entry_country_id' => $cid);
 
-                $db->perform(TABLE_ADDRESS_BOOK, $sql_data_array);
-                $sendto = $billto = $db->InsertId();
+                zen_db_perform(TABLE_ADDRESS_BOOK, $sql_data_array);
+                $sendto = $billto = $db->Insert_ID();
             }
 
 			if(!$already_completed){
 				$order->billmateref=$result1->number;
 				$payment['tan']=$result1->number;
 			}
-            zen_session_unregister('billmatecardpay_ot');
+            unset($_SESSION['billmatecardpay_ot']);
 			zen_mail($order->customer['firstname'] . ' ' . $order->customer['lastname'], $order->customer['email_address'], EMAIL_TEXT_SUBJECT, $email_order, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
-            zen_session_unregister('billmatecardpay_ot');
 			// send emails to other people
 			if (SEND_EXTRA_ORDER_EMAILS_TO != '') {
 				zen_mail('', SEND_EXTRA_ORDER_EMAILS_TO, EMAIL_TEXT_SUBJECT, $email_order, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
@@ -989,16 +987,16 @@ class billmatecardpay {
 			// load the after_process function from the payment modules
 			$this->after_process();
 
-			$cart->reset(true);
+			$_SESSION['cart']->reset(true);
 
 			// unregister session variables used during checkout
-			zen_session_unregister('sendto');
-			zen_session_unregister('billto');
-			zen_session_unregister('shipping');
-			zen_session_unregister('payment');
-			zen_session_unregister('comments');
+			unset($_SESSION['sendto']);
+			unset($_SESSION['billto']);
+			unset($_SESSION['shipping']);
+			unset($_SESSION['payment']);
+			unset($_SESSION['comments']);
 
-			zen_session_unregister('cart_billmate_card_ID');
+			unset($_SESSION['cart_billmate_card_ID']);
 
 	        zen_redirect(zen_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL'));
  
@@ -1018,7 +1016,7 @@ class billmatecardpay {
         $has_billmatecardpay_ref = false;
 
         while(!$fields->EOF) {
-            if ( $fields['Field'] == "billmateref" )
+            if ( $fields->fields['Field'] == "billmateref" )
                 $has_billmatecardpay_ref = true;
 	        $fields->MoveNext();
         }
@@ -1039,13 +1037,13 @@ class billmatecardpay {
 							date("Y-m-d G:i:s") .
 							' Invoice #: ' .
 							$_DATA['number']));
-			$db->perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+			zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
 			
 			$db->Execute("update " . TABLE_ORDERS . " set orders_status = '" . (MODULE_PAYMENT_BILLMATECARDPAY_ORDER_STATUS_ID ) . "', last_modified = now() where orders_id = '" . (int)$_DATA['orderid'] . "'");
 		}
 
         //Delete Session with user details
-        zen_session_unregister('user_billing');
+	    unset($_SESSION['user_billing']);
 
         return false;
     }

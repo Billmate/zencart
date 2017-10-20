@@ -73,7 +73,7 @@ if(!class_exists('Encoding',false)){
 										'customer_notified' => 0,
 										'comments' => ('Billmate_CALLBACK')
 									);
-				$db->perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+				zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
 
 				$sql_data_array = array('orders_id' => $_DATA['order_id'],
 										'orders_status_id' => MODULE_PAYMENT_BILLMATEBANK_ORDER_STATUS_ID,
@@ -81,7 +81,7 @@ if(!class_exists('Encoding',false)){
 										'customer_notified' => 0,
 										'comments' => ('Accepted by Billmate ' . date("Y-m-d G:i:s") .' Invoice #: ' . $result1->number)
 									);
-				$db->perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+				zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
 				
 				$db->Execute("update " . TABLE_ORDERS . " set orders_status = '" . (MODULE_PAYMENT_BILLMATEBANK_ORDER_STATUS_ID ) . "', last_modified = now() where orders_id = '" . (int)$_DATA['order_id'] . "'");
 
