@@ -721,7 +721,7 @@ class billmatecardpay {
 											"recurringnr" => "",
 											"accepturl" => zen_href_link(FILENAME_CHECKOUT_PROCESS, '', 'SSL'),
 											"cancelurl" => zen_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL').'?cancel=true&payment_error=billmatecardpay&error_message='.rawurlencode(MODULE_PAYMENT_BILLMATECARDPAY_CANCEL),
-											"callbackurl" => zen_href_link('ext/cardpay_ipn.php', '', 'SSL'), //'http://api.billmate.se/callback.php',
+											"callbackurl" => zen_href_link('ext/cardpay_ipn.php', '', 'SSL',false,false,true), //'http://api.billmate.se/callback.php',
 									);
 		$invoiceValues['Customer'] = array(	'customernr'=> (string)$customer_id,
 											'pno'=>'',

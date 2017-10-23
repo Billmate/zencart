@@ -19,7 +19,7 @@ function partpay($order_id){
     $pcbillmate = $_SESSION['pcbillmate_ot'];
 
     require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
-    include_once(DIR_WS_LANGUAGES . $language . '/modules/payment/pcbillmate.php');
+    include_once(DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/payment/pcbillmate.php');
 
     require(DIR_WS_CLASSES . 'order.php');
 
@@ -207,18 +207,17 @@ function partpay($order_id){
 
     $k = new BillMate($eid,$secret,$ssl,$testmode,$debug,$codes);
     $invoiceValues = array();
-    $lang = $languageCode['code'] == 'se' ? 'sv' : $languageCode['code'];
+    $lang = $languageCode->fields['code'] == 'se' ? 'sv' : $languageCode->fields['code'];
     $invoiceValues['PaymentData'] = array(	"method" => "4",		//1=Factoring, 2=Service, 4=PartPayment, 8=Card, 16=Bank, 24=Card/bank and 32=Cash.
-        "currency" => $currency, //"SEK",
-        "paymentplanid" => $pclass,
+        "currency" => $_SESSION['currency'], //"SEK",
         "language" => $lang,
         "country" => "SE",
-        "orderid" => (string)$cart_billmate_card_ID,
+        "orderid" => (string)$_SESSION['cart_billmate_card_ID'],
         "bankid" => true,
         "returnmethod" => "GET",
         "accepturl" => zen_href_link(FILENAME_CHECKOUT_PROCESS,'', 'SSL'),
         "cancelurl" => zen_href_link(FILENAME_CHECKOUT_PROCESS, '', 'SSL'),
-        "callbackurl" => zen_href_link('ext/common_ipn.php', '', 'SSL')
+        "callbackurl" => zen_href_link('ext/common_ipn.php', '', 'SSL',false,false,true)
     );
     $invoiceValues['PaymentInfo'] = array( 	"paymentdate" => date('Y-m-d'),
         "yourreference" => "",
@@ -265,8 +264,9 @@ function partpay($order_id){
 
     if(isset($result1->code)){
         billmate_remove_order($cart_billmate_card_ID,true);
-        zen_session_unregister('cart_Billmate_card_ID');
-        zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
+
+        unset($_SESSION['cart_billmate_card_ID']);
+        zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT,
             'payment_error=pcbillmate&error=' . utf8_encode($result1->message)));
         exit;
     } else {
@@ -288,7 +288,7 @@ function invoice($order_id){
     $billmate_ot = $_SESSION['billmate_ot'];
 
     require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
-    include_once(DIR_WS_LANGUAGES . $language . '/modules/payment/billmate_invoice.php');
+    include_once(DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/payment/pcbillmate.php');
     require(DIR_WS_CLASSES . 'order.php');
 
 
@@ -493,17 +493,17 @@ function invoice($order_id){
     }
     $k = new BillMate($eid,$secret,$ssl,$testmode,$debug,$codes);
     $invoiceValues = array();
-    $lang = $languageCode['code'] == 'se' ? 'sv' : $languageCode['code'];
+    $lang = $languageCode->fields['code'] == 'se' ? 'sv' : $languageCode->fields['code'];
     $invoiceValues['PaymentData'] = array(	"method" => "1",		//1=Factoring, 2=Service, 4=PartPayment, 8=Card, 16=Bank, 24=Card/bank and 32=Cash.
-        "currency" => $currency, //"SEK",
+        "currency" => $_SESSION['currency'], //"SEK",
         "language" => $lang,
         "country" => "SE",
-        "orderid" => (string)$cart_billmate_card_ID,
+        "orderid" => (string)$_SESSION['cart_billmate_card_ID'],
         "bankid" => true,
         "returnmethod" => "GET",
         "accepturl" => zen_href_link(FILENAME_CHECKOUT_PROCESS,'', 'SSL'),
         "cancelurl" => zen_href_link(FILENAME_CHECKOUT_PROCESS, '', 'SSL'),
-        "callbackurl" => zen_href_link('ext/common_ipn.php', '', 'SSL')
+        "callbackurl" => zen_href_link('ext/common_ipn.php', '', 'SSL',false,false,true)
     );
     $invoiceValues['PaymentInfo'] = array( 	"paymentdate" => date('Y-m-d'),
         "yourreference" => "",
@@ -547,8 +547,8 @@ function invoice($order_id){
     $result1->raw_response = $k->raw_response;
     if(isset($result1->code)){
         billmate_remove_order($order_id,true);
-        zen_session_unregister('cart_Billmate_card_ID');
-        zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
+        unset($_SESSION['cart_billmate_card_ID']);
+        zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT,
             'payment_error=billmate_invoice&error=' . utf8_encode($result1->message)));
         exit;
     } else {

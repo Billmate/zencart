@@ -175,7 +175,7 @@ class pcbillmate {
 					return true;
 				}
 				$.ajax({
-					url: "'.zen_href_link('ext/getaddress.php?method='.$this->code, '', 'SSL').'",
+					url: "'.zen_href_link('ext/getaddress.php?method='.$this->code, '', 'SSL',false,false,true).'",
 					data: formdata,
 					method: "POST",
 					success:function(response){
@@ -329,8 +329,8 @@ class pcbillmate {
     }
 
     function pre_confirmation_check() {
-        global $pcbillmate_testmode, $order, $GA_OLD, $KRED_SE_PNO, $user_billing,$languages_id,$billmate_pno,$db;
-
+        global $pcbillmate_testmode, $order, $GA_OLD, $KRED_SE_PNO, $user_billing,$billmate_pno,$db;
+        $languages_id = $_SESSION['languages_id'];
         //Set the right Host and Port
         $livemode = $this->pcbillmate_testmode == false;
 
@@ -541,8 +541,8 @@ class pcbillmate {
     }
 
     function confirmation() {
-        global $cartID, $cart_billmate_card_ID, $customer_id, $languages_id, $order, $order_total_modules, $currencies, $db;
-
+        global $cartID, $cart_billmate_card_ID, $customer_id,  $order, $order_total_modules, $currencies, $db;
+        $languages_id = $_SESSION['languages_id'];
         if (isset($_SESSION['cart_billmate_card_ID'])) {
             $order_id = $_SESSION['cart_billmate_card_ID'];
 
@@ -812,7 +812,7 @@ class pcbillmate {
             zen_session_id());
         //$return = $this->doInvoice();
         $redirect = false;
-        $redirect = zen_href_link('ext/payment.php', 'method=partpay%26order_id='.$cart_billmate_card_ID, 'SSL');
+        $redirect = zen_href_link('ext/payment.php', 'method=partpay%26order_id='.$cart_billmate_card_ID, 'SSL',false,false,true);
 
         if($redirect) {
             $process_button_string .= '<script type="text/javascript">
@@ -840,8 +840,8 @@ class pcbillmate {
 
     function doInvoice($add_order = false ){
         global $order, $customer_id, $currency, $currencies, $sendto, $billto,
-               $pcbillmate,$insert_id, $languages_id, $language_id, $language, $currency, $cart_billmate_card_ID,$billmate_pno,$pclass,$db;
-
+               $pcbillmate,$insert_id, $language_id, $language, $currency, $cart_billmate_card_ID,$billmate_pno,$pclass,$db;
+        $languages_id = $_SESSION['languages_id'];
         $pcbillmate = $_SESSION['pcbillmate_ot'];
 
         require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
@@ -1081,8 +1081,8 @@ class pcbillmate {
     }
 
     function before_process() {
-        global $order, $customer_id, $currency, $currencies, $sendto, $billto, $pcbillmate_ot, $pcbillmate_testmode,$languages_id, $cart_billmate_card_ID, $cart, $order_id,$payment,$db;
-
+        global $order, $customer_id, $currency, $currencies, $sendto, $billto, $pcbillmate_ot, $pcbillmate_testmode, $cart_billmate_card_ID, $cart, $order_id,$payment,$db;
+        $languages_id = $_SESSION['languages_id'];
 		//Assigning billing session
 		$pcbillmate = $_SESSION['pcbillmate_ot'];
 
@@ -1295,9 +1295,9 @@ class pcbillmate {
                 $order->billmateref=$result1->number;
                 $payment['tan']=$result1->number;
             }
-            zen_session_unregister('pcbillmate_ot');
+           
             zen_mail($order->customer['firstname'] . ' ' . $order->customer['lastname'], $order->customer['email_address'], EMAIL_TEXT_SUBJECT, $email_order, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
-            zen_session_unregister('pcbillmate_ot');
+            unset($_SESSION['pcbillmate_ot']);
             // send emails to other people
             if (SEND_EXTRA_ORDER_EMAILS_TO != '') {
                 zen_mail('', SEND_EXTRA_ORDER_EMAILS_TO, EMAIL_TEXT_SUBJECT, $email_order, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);

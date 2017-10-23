@@ -673,7 +673,7 @@ class billmatebank {
 											"recurringnr" => "",
 											"accepturl" => zen_href_link(FILENAME_CHECKOUT_PROCESS, '', 'SSL'),
 											"cancelurl" => zen_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL').'?cancel=true&payment_error=billmatebank&error='.rawurlencode(MODULE_PAYMENT_BILLMATEBANK_CANCEL),
-											"callbackurl" => zen_href_link('ext/bankpay_ipn.php', '', 'SSL'), //'http://api.billmate.se/callback.php',
+											"callbackurl" => zen_href_link('ext/bankpay_ipn.php', '', 'SSL',false,false,true), //'http://api.billmate.se/callback.php',
 									);
 		$invoiceValues['Customer'] = array(	'customernr'=> (string)$customer_id,
 											'pno'=>'',

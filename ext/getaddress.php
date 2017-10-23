@@ -8,7 +8,7 @@
 ini_set('display_errors',1);
 error_reporting(E_ALL);
 global $user_billing, $language, $languages_id,$db;
-	chdir('../../../../');
+	chdir('../');
 	require('includes/application_top.php');
 	require(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/Billmate.php');
 	require(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/utf8.php');
@@ -17,7 +17,7 @@ global $user_billing, $language, $languages_id,$db;
 
 require(DIR_WS_CLASSES . 'order.php');
 	// load the language file according to set language.
-	include(DIR_WS_LANGUAGES . $language . '/modules/payment/billmate_invoice.php');
+	include(DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/payment/billmate_invoice.php');
 	$order = new order;
 	$method = $_GET['method'];
 	if($method == 'billmate_invoice')
@@ -100,7 +100,7 @@ require(DIR_WS_CLASSES . 'order.php');
 
 
 		if(empty($_POST['geturl'])){
-			$html = '<span style="line-height: 1.4em;">'.($address['firstname']).' '.$address['lastname'].'<br>'.$address['street'].'<br>'.$address['zip'].' '.$address['city'].'</span><div style="margin-top:1em;"><input type="button" value="'.MODULE_PAYMENT_BILLMATE_YES.'" onclick="updateAddress();" class="billmate_button"/> <a onclick="closefunc(this)" class="linktag"/>'.MODULE_PAYMENT_BILLMATE_NO.'</a></div> ';
+			$html = '<span style="line-height: 1.4em;">'.($address['firstname']).' '.$address['lastname'].'<br>'.$address['street'].'<br>'.$address['zip'].' '.$address['city'].'</span><div style="margin-top:1em;"><input type="button" value="'.MODULE_PAYMENT_BILLMATE_YES.'" onclick="window.updateAddress();" class="billmate_button"/> <a onclick="window.closefunc(this)" class="linktag"/>'.MODULE_PAYMENT_BILLMATE_NO.'</a></div> ';
 			die(json_encode(array('success' => false, 'content' => convertToUTF8($html),'popup' => true)));
 		} else {
 			if($address->firstname == "") {

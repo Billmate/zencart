@@ -1,10 +1,85 @@
-//https://github.com/paulirish/matchMedia.js/
-try{
-window.matchMedia||(window.matchMedia=function(){"use strict";var e=window.styleMedia||window.media;if(!e){var t=document.createElement("style"),n=document.getElementsByTagName("script")[0],r=null;t.type="text/css";t.id="matchmediajs-test";n.parentNode.insertBefore(t,n);r="getComputedStyle"in window&&window.getComputedStyle(t,null)||t.currentStyle;e={matchMedium:function(e){var n="@media "+e+"{ #matchmediajs-test { width: 1px; } }";if(t.styleSheet){t.styleSheet.cssText=n}else{t.textContent=n}return r.width==="1px"}}}return function(t){return{matches:e.matchMedium(t||"all"),media:t||"all"}}}())
+function match_media_mount(){
+window.matchMedia = window.matchMedia || (function(doc, undefined){
+
+  var docElem  = doc.documentElement,
+      refNode  = docElem.firstElementChild || docElem.firstChild,
+      // fakeBody required for <FF4 when executed in <head>
+      fakeBody = doc.createElement('body'),
+      div      = doc.createElement('div');
+
+  div.id = 'mq-test-1';
+  div.style.cssText = "position:absolute;top:-100em";
+  fakeBody.style.background = "none";
+  fakeBody.appendChild(div);
+
+  var mqRun = function ( mq ) {
+    div.innerHTML = '&shy;<style media="' + mq + '"> #mq-test-1 { width: 42px; }</style>';
+    docElem.insertBefore( fakeBody, refNode );
+    bool = div.offsetWidth === 42;
+    docElem.removeChild( fakeBody );
+    
+    return { matches: bool, media: mq };
+  },
+  
+  getEmValue = function () {
+    var ret,
+        body = docElem.body,
+        fakeUsed = false;
+
+    div.style.cssText = "position:absolute;font-size:1em;width:1em";
+
+    if( !body ) {
+      body = fakeUsed = doc.createElement( "body" );
+      body.style.background = "none";
+    }
+
+    body.appendChild( div );
+
+    docElem.insertBefore( body, docElem.firstChild );
+
+    if( fakeUsed ) {
+      docElem.removeChild( body );
+    } else {
+      body.removeChild( div );
+    }
+    
+    //also update eminpx before returning
+    ret = eminpx = parseFloat( div.offsetWidth );
+
+    return ret;
+  },
+  
+  //cached container for 1em value, populated the first time it's needed 
+  eminpx,
+  
+  // verify that we have support for a simple media query
+  mqSupport = mqRun( '(min-width: 0px)' ).matches;
+
+  return function ( mq ) {
+    if( mqSupport ) {
+      return mqRun( mq );
+    } else {
+      var min = mq.match( /\(min\-width:[\s]*([\s]*[0-9\.]+)(px|em)[\s]*\)/ ) && parseFloat( RegExp.$1 ) + ( RegExp.$2 || "" ),
+          max = mq.match( /\(max\-width:[\s]*([\s]*[0-9\.]+)(px|em)[\s]*\)/ ) && parseFloat( RegExp.$1 ) + ( RegExp.$2 || "" ),
+          minnull = min === null,
+          maxnull = max === null,
+          currWidth = doc.body.offsetWidth,
+          em = 'em';
+      
+      if( !!min ) { min = parseFloat( min ) * ( min.indexOf( em ) > -1 ? ( eminpx || getEmValue() ) : 1 ); }
+      if( !!max ) { max = parseFloat( max ) * ( max.indexOf( em ) > -1 ? ( eminpx || getEmValue() ) : 1 ); }
+      
+      bool = ( !minnull || !maxnull ) && ( minnull || currWidth >= min ) && ( maxnull || currWidth <= max );
+
+      return { matches: bool, media: mq };
+    }
+  };
+
+}( document ));
 
 //https://raw.github.com/paulirish/matchMedia.js/master/matchMedia.addListener.js
 (function(){if(window.matchMedia&&window.matchMedia("all").addListener){return false}var e=window.matchMedia,t=e("only all").matches,n=false,r=0,i=[],s=function(t){clearTimeout(r);r=setTimeout(function(){for(var t=0,n=i.length;t<n;t++){var r=i[t].mql,s=i[t].listeners||[],o=e(r.media).matches;if(o!==r.matches){r.matches=o;for(var u=0,a=s.length;u<a;u++){s[u].call(window,r)}}}},30)};window.matchMedia=function(r){var o=e(r),u=[],a=0;o.addListener=function(e){if(!t){return}if(!n){n=true;window.addEventListener("resize",s,true)}if(a===0){a=i.push({mql:o,listeners:u})}u.push(e)};o.removeListener=function(e){for(var t=0,n=u.length;t<n;t++){if(u[t]===e){u.splice(t,1)}}};return o}})()
-}catch(e){}
+}
 if( typeof modalWin == 'undefined' ){
 
 var xxx_modalPopupWindow = null;
@@ -15,11 +90,9 @@ function CreateModalPopUpObject() {
     }
     return xxx_modalPopupWindow;
 }
-function noPressButton(){
-	modalWin.HideModalPopUp();
-}
+
 function ModalPopupWindow() {
-    var strOverLayHTML = '<div id="divOverlay" style="position:absolute;z-index:999; background-color:WHITE; filter: alpha(opacity = 70);opacity:0.7;"></div><div id="divFrameParent" style="position:absolute;z-index:9999; display:none;background-color:white;border:1px solid;-moz-box-shadow: 0 0 10px 10px #BBB;-webkit-box-shadow: 0 0 10px 10px #BBB;box-shadow: 0 0 10px 10px #BBB;padding:10px;line-height:21px;font-size:15px;color:#000;text-align:left;font-family:Arial,Helvetica,sans-serif;"	class="Example_F"><div class="heading" id="spanOverLayTitle"></div><div id="divMessage" style="display:none;"><span id="spanMessage"></span></div><span id="spanLoading"></span></div>'
+    var strOverLayHTML = '<div id="divOverlay" style="position:absolute;z-index:99999; background-color:WHITE; filter: alpha(opacity = 70);opacity:0.7;"></div><div id="divFrameParent" style="position:absolute;z-index:999999; display:none;background-color:white;border:1px solid;-moz-box-shadow: 0 0 10px 10px #BBB;-webkit-box-shadow: 0 0 10px 10px #BBB;box-shadow: 0 0 10px 10px #BBB;padding:10px;line-height:21px;font-size:15px;color:#000;text-align:left;font-family:Arial,Helvetica,sans-serif;"	class="Example_F"><div class="heading" id="spanOverLayTitle"></div><div id="divMessage" style="display:none;"><span id="spanMessage"></span></div><span id="spanLoading"></span></div>'
     var orginalHeight;
     var orginalWidth;
     var btnStyle="";
@@ -114,7 +187,6 @@ function ModalPopupWindow() {
     }
     this.HideModalPopUp = function () {
 		popupshowed = false;
-		//jQuery("#billmategeturl").remove();
         var divFrameParent = document.getElementById("divFrameParent");
         var divOverlay = document.getElementById("divOverlay");
         divOverlay.style.display = "none";
@@ -157,26 +229,31 @@ function AddEvent(html_element, event_name, event_function)
       html_element.addEventListener(event_name, event_function, false); //don't need the 'call' trick because in FF everything already works in the right way          
 } 
 var modalWin = new CreateModalPopUpObject();
-function closefunc(obj){
-	checkout.setLoadWaiting(false);
+window.closefunc = function (obj){
+	//checkout.setLoadWaiting(false);
 	modalWin.HideModalPopUp();
 }
+window.updateAddress = function (){
+    jQuery('form[name="checkout_payment"]').append("<input type=\'hidden\' name=\'geturl\' value=\'true\'/>");
+    jQuery('form[name="checkout_payment"]').submit()
+};
 function reviewstep(){
 }
 
 function ShowMessage(content,wtitle){
-	if(matchMedia('(max-width: 800px)').matches){
+	if(matchMedia('(min-width: 500px) and (max-width: 800px)').matches){
 		modalWin.ShowMessage(content,370,250,wtitle);
 	}else if(matchMedia('(min-width: 800px)').matches){
-		modalWin.ShowMessage(content,280,500,wtitle);
+		modalWin.ShowMessage(content,260,500,wtitle);
 	}
 }
+match_media_mount();
 AddEvent(window,'resize',function(){
 	if( popupshowed ){
 		if(matchMedia('(min-width: 500px) and (max-width: 800px)').matches){
 			modalWin.ResizePopUp(370,250);
 		}else if(matchMedia('(min-width: 800px)').matches){
-			modalWin.ResizePopUp(280,500);
+			modalWin.ResizePopUp(260,500);
 		}
 	}
 });

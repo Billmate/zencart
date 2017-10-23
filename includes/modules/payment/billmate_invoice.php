@@ -177,7 +177,7 @@ class billmate_invoice {
 					return true;
 				}
 				$.ajax({
-					url: "'.zen_href_link('ext/getaddress.php?method='.$this->code, '', 'SSL').'",
+					url: "'.zen_href_link('ext/getaddress.php?method='.$this->code, '', 'SSL',false,false,true).'",
 					data: formdata,
 					method: "POST",
 					success:function(response){
@@ -372,7 +372,7 @@ class billmate_invoice {
         $pnoencoding = $KRED_SE_PNO;
         $type = $GA_OLD;
 
-	    $languageCode = $db->Execude("select code from languages where languages_id = " . $languages_id);
+	    $languageCode = $db->Execute("select code from languages where languages_id = " . $_SESSION['languages_id']);
 	    if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$languageCode->fields['code']);
         if(!defined('BILLMATE_SERVER')) define('BILLMATE_SERVER','2.2');
 
@@ -522,8 +522,8 @@ class billmate_invoice {
     }
 
     function confirmation() {
-        global $cartID, $cart_billmate_card_ID, $customer_id, $languages_id, $order, $order_total_modules, $currencies,$db;
-
+        global $cartID, $cart_billmate_card_ID, $customer_id, $order, $order_total_modules, $currencies,$db;
+        $languages_id = $_SESSION['languages_id'];
         if (isset($_SESSION['cart_billmate_card_ID'])) {
             $order_id = $_SESSION['cart_billmate_card_ID'];
 
@@ -709,8 +709,8 @@ class billmate_invoice {
     }
 
     function process_button() {
-        global $order, $order_total_modules, $billmate_ot, $shipping, $languages_id,$cart_billmate_card_ID,$sendto,$billto,$db;
-
+        global $order, $order_total_modules, $billmate_ot, $shipping,$cart_billmate_card_ID,$sendto,$billto,$db;
+        $languages_id = $_SESSION['languages_id'];
         $counter = 1;
         $process_button_string = '';
         $checked = true;
@@ -796,7 +796,7 @@ class billmate_invoice {
         $process_button_string .= zen_draw_hidden_field(zen_session_name(),
                 zen_session_id());
         //$return = $this->doInvoice();
-        $redirect = zen_href_link('ext/payment.php', 'method=invoice%26order_id='.$cart_billmate_card_ID, 'SSL');
+        $redirect = zen_href_link('ext/payment.php', 'method=invoice%26order_id='.$cart_billmate_card_ID, 'SSL',false,false,true);
         
         $billmate_billing = $order->billing;
         $_SESSION['billmate_billing'] = $billmate_billing;
@@ -826,8 +826,8 @@ class billmate_invoice {
 
     function doInvoice($add_order = false ){
         global $order, $customer_id, $currency, $currencies, $sendto, $billto,
-               $billmate_ot,$insert_id, $languages_id, $language_id, $language, $currency, $cart_billmate_card_ID,$billmate_pno,$db;
-
+               $billmate_ot,$insert_id, $language_id, $language, $currency, $cart_billmate_card_ID,$billmate_pno,$db;
+        $languages_id = $_SESSION['languages_id'];
         $billmate_ot = $_SESSION['billmate_ot'];
         
         require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
@@ -1074,8 +1074,8 @@ class billmate_invoice {
     function before_process() {
 
      global $order, $customer_id, $currency, $currencies, $sendto, $billto,
-               $billmate_ot, $billmate_livemode, $billmate_testmode,$insert_id, $languages_id,$cart_billmate_card_ID,$payment,$cart,$order_id,$db;
-
+               $billmate_ot, $billmate_livemode, $billmate_testmode,$insert_id,$cart_billmate_card_ID,$payment,$cart,$order_id,$db;
+        $languages_id = $_SESSION['languages_id'];
         require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
 		//Assigning billing session
 		$billmate_ot = $_SESSION['billmate_ot'];
@@ -1292,9 +1292,9 @@ class billmate_invoice {
                 $order->billmateref=$result1->number;
                 $payment['tan']=$result1->number;
             }
-            zen_session_unregister('billmatecardpay_ot');
+            
             zen_mail($order->customer['firstname'] . ' ' . $order->customer['lastname'], $order->customer['email_address'], EMAIL_TEXT_SUBJECT, $email_order, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
-            zen_session_unregister('billmatecardpay_ot');
+            unset($_SESSION['billmate_ot']);
             // send emails to other people
             if (SEND_EXTRA_ORDER_EMAILS_TO != '') {
                 zen_mail('', SEND_EXTRA_ORDER_EMAILS_TO, EMAIL_TEXT_SUBJECT, $email_order, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
@@ -1324,13 +1324,13 @@ class billmate_invoice {
             $cart->reset(true);
 
             // unregister session variables used during checkout
-            zen_session_unregister('sendto');
-            zen_session_unregister('billto');
-            zen_session_unregister('shipping');
-            zen_session_unregister('payment');
-            zen_session_unregister('comments');
+            unset($_SESSION['sendto']);
+            unset($_SESSION['billto']);
+            unset($_SESSION['shipping']);
+            unset($_SESSION['payment']);
+            unset($_SESSION['comments']);
 
-            zen_session_unregister('cart_billmate_card_ID');
+            unset($_SESSION['cart_billmate_card_ID']);
 
             zen_redirect(zen_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL'));
 
