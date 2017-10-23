@@ -175,7 +175,7 @@ class pcbillmate {
 					return true;
 				}
 				$.ajax({
-					url: "'.zen_href_link('ext/modules/payment/billmate/getaddress.php?method='.$this->code, '', 'SSL').'",
+					url: "'.zen_href_link('ext/getaddress.php?method='.$this->code, '', 'SSL').'",
 					data: formdata,
 					method: "POST",
 					success:function(response){
@@ -812,7 +812,7 @@ class pcbillmate {
             zen_session_id());
         //$return = $this->doInvoice();
         $redirect = false;
-        $redirect = zen_href_link('ext/modules/payment/billmate/payment.php', 'method=partpay%26order_id='.$cart_billmate_card_ID, 'SSL');
+        $redirect = zen_href_link('ext/payment.php', 'method=partpay%26order_id='.$cart_billmate_card_ID, 'SSL');
 
         if($redirect) {
             $process_button_string .= '<script type="text/javascript">
@@ -1024,7 +1024,7 @@ class pcbillmate {
             "returnmethod" => "GET",
             "accepturl" => zen_href_link(FILENAME_CHECKOUT_PROCESS,'', 'SSL'),
             "cancelurl" => zen_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL'),
-            "callbackurl" => zen_href_link('ext/modules/payment/billmate/common_ipn.php', '', 'SSL')
+            "callbackurl" => zen_href_link('ext/common_ipn.php', '', 'SSL')
         );
         $invoiceValues['PaymentInfo'] = array( 	"paymentdate" => date('Y-m-d'),
             "yourreference" => "",
