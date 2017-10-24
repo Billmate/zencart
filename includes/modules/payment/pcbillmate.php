@@ -204,6 +204,7 @@ class pcbillmate {
     function selection() {
         global $pcbillmate_testmode, $order, $customer_id, $currencies, $KRED_ISO3166_SE, $currency, $user_billing, $shipping,$languages_id,$cart_billmate_card_ID,$db;
 
+        $currency = $_SESSION['currency'];
         //Set the right Host and Port
         $livemode = $this->pcbillmate_testmode == false;
 
@@ -260,6 +261,9 @@ class pcbillmate {
             $langCode = 'en';
         $langCode = $languageCode->fields['code'] == 'se' ? 'sv' : $languageCode->fields['code'];
 
+        error_log('lang'.$langCode);
+        error_log('total'.$total);
+        error_log('table'.MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE);
         $pclasses = BillmateUtils::calc_monthly_cost($total, MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, strtolower($order->billing['country']['iso_code_2']), 0,$langCode,MODULE_PAYMENT_PCBILLMATE_MONTH);
         
         $lowest = BillmateUtils::get_cheapest_pclass($pclasses,$total);
@@ -290,7 +294,7 @@ class pcbillmate {
 
 
         $fields=array(
-                array('title' => '<img src="'.HTTP_SERVER.'/'.DIR_WS_IMAGES.'/billmate/'.$languageCode['code'].'/partpayment.png" />',
+                array('title' => '<img src="'.HTTP_SERVER.'/'.DIR_WS_IMAGES.'/billmate/'.$langCode.'/partpayment.png" />',
                         'field' => '<script type="text/javascript">
                           if(!window.jQuery){
 	                          var jq = document.createElement("script");

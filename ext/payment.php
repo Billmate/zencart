@@ -194,7 +194,7 @@ function partpay($order_id){
 
     $ssl = true;
     $debug = false;
-    $languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
+    $languageCode = $db->Execute("select code from languages where languages_id = " . $_SESSION['languages_id']);
     $langCode  = (strtolower($languageCode->fields['code']) == 'se') ? 'sv' : $languageCode->fields['code'];
 
     $testmode = false;
@@ -216,6 +216,7 @@ function partpay($order_id){
         "country" => "SE",
         "orderid" => (string)$_SESSION['cart_billmate_card_ID'],
         "bankid" => true,
+        'paymentplanid' => $_SESSION['pcbillmate_pclass'],
         "returnmethod" => "GET",
         "accepturl" => zen_href_link(FILENAME_CHECKOUT_PROCESS,'', 'SSL'),
         "cancelurl" => zen_href_link(FILENAME_CHECKOUT_PROCESS, '', 'SSL'),
