@@ -302,7 +302,7 @@ class billmate_invoice {
                           if(!window.jQuery){
 	                          var jq = document.createElement("script");
 	                          jq.type = "text/javascript";
-	                          jq.src = "'.HTTP_SERVER.DIR_WS_HTTP_CATALOG.'jquery.js";
+	                          jq.src = "'.HTTP_SERVER.'/jquery.js";
 	                          document.getElementsByTagName("head")[0].appendChild(jq);
                           }
 </script>'.$js),
@@ -358,7 +358,7 @@ class billmate_invoice {
 			$errors[] = sprintf( MODULE_PAYMENT_BILLMATE_EMAIL, $order->customer['email_address']);;
 		}
         if (!empty($errors)) {
-            zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=billmate_invoice&error='.implode(', ', $errors), 'SSL'));
+            zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=billmate_invoice&error_message='.implode(', ', $errors), 'SSL'));
         }
 
         $pno = $this->billmate_pnum = $_POST['billmate_pnum'];
@@ -381,7 +381,7 @@ class billmate_invoice {
 //      $status = get_addresses($eid, BillmateUtils::convertData($pno), $secret, $pnoencoding, $type, $result);
 
         if (isset($result->message) || empty($result) || !is_object($result)) {
-            zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
+            zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT,
                     'payment_error=billmate_invoice&error='.
                     strip_tags( utf8_encode($result->message) ),
                     'SSL', true, false));
@@ -478,7 +478,7 @@ class billmate_invoice {
                 $WrongAddress = $code;
                 global $messageStack;
                 $_SESSION['WrongAddress'] = $WrongAddress;
-                zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=billmate_invoice&error=invalidaddress', 'SSL'));
+                zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=billmate_invoice&error=invalidaddress', 'SSL'));
 	        }else{
 			   if($result->company != "") {
 					$this->billmate_fname = $order->billing['firstname'];
@@ -523,6 +523,9 @@ class billmate_invoice {
 
     function confirmation() {
         global $cartID, $cart_billmate_card_ID, $customer_id, $order, $order_total_modules, $currencies,$db;
+        //$order_total_modules = $_SESSION['order_total_modules'];
+        $customer_id = $_SESSION['customer_id'];
+
         $languages_id = $_SESSION['languages_id'];
         if (isset($_SESSION['cart_billmate_card_ID'])) {
             $order_id = $_SESSION['cart_billmate_card_ID'];
@@ -564,17 +567,20 @@ class billmate_invoice {
                             'value' => $shipping_value,
                             'sort_order' => $GLOBALS[$class]->sort_order);
                     } else {
-                        if ($GLOBALS[$class]->enabled) {
-                            for ($i=0, $n=sizeof($GLOBALS[$class]->output); $i<$n; $i++) {
-                                if (zen_not_null($GLOBALS[$class]->output[$i]['title']) && zen_not_null($GLOBALS[$class]->output[$i]['text'])) {
-                                    $order_totals[] = array('code' => $GLOBALS[$class]->code,
-                                        'title' => $GLOBALS[$class]->output[$i]['title'],
-                                        'text' => $GLOBALS[$class]->output[$i]['text'],
-                                        'value' => $GLOBALS[$class]->output[$i]['value'],
-                                        'sort_order' => $GLOBALS[$class]->sort_order);
-                                }
+                        $GLOBALS[$class]->process();
+                        for ($i=0, $n=sizeof($GLOBALS[$class]->output); $i<$n; $i++) {
+
+
+                            if (zen_not_null($GLOBALS[$class]->output[$i]['title']) && zen_not_null($GLOBALS[$class]->output[$i]['text'])) {
+                                $order_totals[] = array('code' => $GLOBALS[$class]->code,
+                                    'title' => $GLOBALS[$class]->output[$i]['title'],
+                                    'text' => $GLOBALS[$class]->output[$i]['text'],
+                                    'value' => $GLOBALS[$class]->output[$i]['value'],
+                                    'sort_order' => $GLOBALS[$class]->sort_order);
                             }
                         }
+                        //$GLOBALS[$class]->{$class}();
+
                     }
                 }
             }
@@ -725,7 +731,7 @@ class billmate_invoice {
 		zen_draw_hidden_field('billmate_city'.$counter, convertToUTF8($order->billing['city'])).
 		zen_draw_hidden_field('billmate_country'.$counter,  convertToUTF8($this->addrs->country));
 
-        $order_totals = $order_total_modules->modules;
+        $order_totals = $_SESSION['order_total_modules']->modules;
         $languages = $db->Execute("select code from " . TABLE_LANGUAGES . " where languages_id = '{$languages_id}'");
 
         $languageCode = strtoupper( $languages->fields['code'] );
@@ -809,7 +815,7 @@ class billmate_invoice {
                           if(!window.jQuery){
                           	var jq = document.createElement("script");
                           	jq.type = "text/javascript";
-                          	jq.src = "' . HTTP_SERVER . DIR_WS_HTTP_CATALOG . 'jquery.js";
+                          	jq.src = "' . HTTP_SERVER .  '/jquery.js";
                             jq.onload = redirectLink;
                           	document.getElementsByTagName("head")[0].appendChild(jq);
                           } else {
@@ -1076,59 +1082,70 @@ class billmate_invoice {
      global $order, $customer_id, $currency, $currencies, $sendto, $billto,
                $billmate_ot, $billmate_livemode, $billmate_testmode,$insert_id,$cart_billmate_card_ID,$payment,$cart,$order_id,$db;
         $languages_id = $_SESSION['languages_id'];
-        require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
-		//Assigning billing session
-		$billmate_ot = $_SESSION['billmate_ot'];
+        $payment = $_SESSION['payment'];
+        $sendto = $_SESSION['sendto'];
+        $billto = $_SESSION['billto'];
+        try {
+            require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
+            //Assigning billing session
+            $billmate_ot = $_SESSION['billmate_ot'];
 
-        require_once DIR_FS_CATALOG . DIR_WS_CLASSES.'/billmate/Billmate.php';
+            require_once DIR_FS_CATALOG . DIR_WS_CLASSES . '/billmate/Billmate.php';
 
-        $secret = MODULE_PAYMENT_BILLMATE_SECRET;
-        $eid = MODULE_PAYMENT_BILLMATE_EID;
-        $debug = false;
-        $ssl = true;
-        $k = new BillMate($eid, $secret,$ssl,$this->billmate_testmode,$debug);
-        foreach($_REQUEST as $key => $value){
-            $_REQUEST[$key] = stripslashes($value);
-        }
+            $secret = MODULE_PAYMENT_BILLMATE_SECRET;
+            $eid = MODULE_PAYMENT_BILLMATE_EID;
+            $debug = false;
+            $ssl = true;
+            $k = new BillMate($eid, $secret, $ssl, $this->billmate_testmode, $debug);
+            error_log('request' . print_r($_REQUEST, true));
 
-        $_DATA = $k->verify_hash($_REQUEST);
-        if(!isset($_DATA['status']) || ($_DATA['status'] == 'Cancelled' || $_DATA['status'] == 'Failed')) {
-            billmate_remove_order($_DATA['orderid'],true);
-            
-            
-            unset($_SESSION['cart_billmate_card_ID']);
-            zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
-                'payment_error=billmate_invoice&error=Please try again.',
-                'SSL', true, false));
+            foreach ($_REQUEST as $key => $value) {
+                $_REQUEST[$key] = stripslashes($value);
+            }
 
-
-            return;
-        }
+            $_DATA = $k->verify_hash($_REQUEST);
+            error_log('data' . print_r($_DATA, true));
+            if (!isset($_DATA['status']) || ($_DATA['status'] == 'Cancelled' || $_DATA['status'] == 'Failed')) {
+                billmate_remove_order($_DATA['orderid'], true);
 
 
-        $status_history_a = $db->Execute("select orders_status_history_id from ".TABLE_ORDERS_STATUS_HISTORY.
-            " where orders_id = {$_DATA['orderid']} and comments='Billmate_IPN'");
+                unset($_SESSION['cart_billmate_card_ID']);
+                zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT,
+                    'payment_error=billmate_invoice&error=Please try again.',
+                    'SSL', true, false));
 
 
+                return;
+            }
 
-        if($status_history_a->RecordCount() > 0){
-            $already_completed = true;
-            unset($_SESSION['billmate_ot']);
-            
-        }else {
-            $already_completed = false;
-            
-        }
-        $_SESSION['already_completed'] = $already_completed;
-        $products_ordered = '';
-        $subtotal = 0;
-        $total_tax = 0;
-        for ($i=0, $n=sizeof($order->products); $i<$n; $i++) {
+
+            $status_history_a = $db->Execute("select orders_status_history_id from " . TABLE_ORDERS_STATUS_HISTORY .
+                " where orders_id = {$_DATA['orderid']} and comments='Billmate_IPN'");
+
+
+            if ($status_history_a->RecordCount() > 0) {
+                $already_completed = true;
+                unset($_SESSION['billmate_ot']);
+
+            } else {
+                $already_completed = false;
+
+            }
+            error_log('completed' . var_export($already_completed, true));
+            $_SESSION['already_completed'] = $already_completed;
+            $products_ordered = '';
+            $subtotal = 0;
+            $total_tax = 0;
+            error_log('order-products' . sizeof($order->products));
+            for ($i = 0, $n = sizeof($order->products); $i < $n; $i++) {
+                error_log('roundProductStart'.$i);
 // Stock Update - Joao Correia
-            if (STOCK_LIMITED == 'true') {
-                $stock_values = null;
-                if (DOWNLOAD_ENABLED == 'true') {
-                    $stock_query_raw = "SELECT products_quantity, pad.products_attributes_filename
+                if (STOCK_LIMITED == 'true') {
+                    error_log('stock_limited');
+                    $stock_values = null;
+                    if (DOWNLOAD_ENABLED == 'true') {
+                        error_log('download');
+                        $stock_query_raw = "SELECT products_quantity, pad.products_attributes_filename
                                 FROM " . TABLE_PRODUCTS . " p
                                 LEFT JOIN " . TABLE_PRODUCTS_ATTRIBUTES . " pa
                                 ON p.products_id=pa.products_id
@@ -1137,42 +1154,46 @@ class billmate_invoice {
                                 WHERE p.products_id = '" . zen_get_prid($order->products[$i]['id']) . "'";
 // Will work with only one option for downloadable products
 // otherwise, we have to build the query dynamically with a loop
-                    $products_attributes = $order->products[$i]['attributes'];
-                    if (is_array($products_attributes)) {
-                        $stock_query_raw .= " AND pa.options_id = '" . $products_attributes[0]['option_id'] . "' AND pa.options_values_id = '" . $products_attributes[0]['value_id'] . "'";
+                        $products_attributes = $order->products[$i]['attributes'];
+                        if (is_array($products_attributes)) {
+                            $stock_query_raw .= " AND pa.options_id = '" . $products_attributes[0]['option_id'] . "' AND pa.options_values_id = '" . $products_attributes[0]['value_id'] . "'";
+                        }
+                        $stock_values = $db->Execute($stock_query_raw);
+                    } else {
+                        $stock_values = $db->Execute("select products_quantity from " . TABLE_PRODUCTS . " where products_id = '" . zen_get_prid($order->products[$i]['id']) . "'");
                     }
-                    $stock_values = $db->Execute($stock_query_raw);
-                } else {
-                    $stock_values = $db->Execute("select products_quantity from " . TABLE_PRODUCTS . " where products_id = '" . zen_get_prid($order->products[$i]['id']) . "'");
-                }
-                if ($stock_values->RecordCount() > 0) {
-                    while(!$stock_values->EOF) {
+                    if ($stock_values->RecordCount() > 0) {
+                        error_log('stock_values count > 0');
+                        while (!$stock_values->EOF) {
 // do not decrement quantities if products_attributes_filename exists
-                        if ((DOWNLOAD_ENABLED != 'true') || (!$stock_values->fields['products_attributes_filename'])) {
-                            $stock_left = $stock_values->fields['products_quantity'] - $order->products[$i]['qty'];
-                        } else {
-                            $stock_left = $stock_values->fields['products_quantity'];
-                        }
-                        $db->Execute("update " . TABLE_PRODUCTS . " set products_quantity = '" . $stock_left . "' where products_id = '" . zen_get_prid($order->products[$i]['id']) . "'");
-                        if (($stock_left < 1) && (STOCK_ALLOW_CHECKOUT == 'false')) {
-                            $db->Execute("update " . TABLE_PRODUCTS . " set products_status = '0' where products_id = '" . zen_get_prid($order->products[$i]['id']) . "'");
+                            if ((DOWNLOAD_ENABLED != 'true') || (!$stock_values->fields['products_attributes_filename'])) {
+                                $stock_left = $stock_values->fields['products_quantity'] - $order->products[$i]['qty'];
+                            } else {
+                                $stock_left = $stock_values->fields['products_quantity'];
+                            }
+                            $db->Execute("update " . TABLE_PRODUCTS . " set products_quantity = '" . $stock_left . "' where products_id = '" . zen_get_prid($order->products[$i]['id']) . "'");
+                            if (($stock_left < 1) && (STOCK_ALLOW_CHECKOUT == 'false')) {
+                                $db->Execute("update " . TABLE_PRODUCTS . " set products_status = '0' where products_id = '" . zen_get_prid($order->products[$i]['id']) . "'");
+                            }
+                            $stock_values->MoveNext();
                         }
                     }
                 }
-            }
 
 // Update products_ordered (for bestsellers list)
-            $db->Execute("update " . TABLE_PRODUCTS . " set products_ordered = products_ordered + " . sprintf('%d', $order->products[$i]['qty']) . " where products_id = '" . zen_get_prid($order->products[$i]['id']) . "'");
+                $db->Execute("update " . TABLE_PRODUCTS . " set products_ordered = products_ordered + " . sprintf('%d',
+                        $order->products[$i]['qty']) . " where products_id = '" . zen_get_prid($order->products[$i]['id']) . "'");
 
 //------insert customer choosen option to order--------
-            $attributes_exist = '0';
-            $products_ordered_attributes = '';
-            if (isset($order->products[$i]['attributes'])) {
-                $attributes_exist = '1';
-                for ($j=0, $n2=sizeof($order->products[$i]['attributes']); $j<$n2; $j++) {
-                    $attribute_values = null;
-                    if (DOWNLOAD_ENABLED == 'true') {
-                        $attributes_query = "select popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix, pad.products_attributes_maxdays, pad.products_attributes_maxcount , pad.products_attributes_filename
+                $attributes_exist = '0';
+                $products_ordered_attributes = '';
+                if (isset($order->products[$i]['attributes'])) {
+                    error_log('attributes');
+                    $attributes_exist = '1';
+                    for ($j = 0, $n2 = sizeof($order->products[$i]['attributes']); $j < $n2; $j++) {
+                        $attribute_values = null;
+                        if (DOWNLOAD_ENABLED == 'true') {
+                            $attributes_query = "select popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix, pad.products_attributes_maxdays, pad.products_attributes_maxcount , pad.products_attributes_filename
                                    from " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval, " . TABLE_PRODUCTS_ATTRIBUTES . " pa
                                    left join " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " pad
                                    on pa.products_attributes_id=pad.products_attributes_id
@@ -1183,161 +1204,183 @@ class billmate_invoice {
                                    and pa.options_values_id = poval.products_options_values_id
                                    and popt.language_id = '" . $languages_id . "'
                                    and poval.language_id = '" . $languages_id . "'";
-                        $attribute_values = $db->Execute($attributes_query);
-                    } else {
-                        $attributes_values = $db->Execute("select popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix from " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval, " . TABLE_PRODUCTS_ATTRIBUTES . " pa where pa.products_id = '" . $order->products[$i]['id'] . "' and pa.options_id = '" . $order->products[$i]['attributes'][$j]['option_id'] . "' and pa.options_id = popt.products_options_id and pa.options_values_id = '" . $order->products[$i]['attributes'][$j]['value_id'] . "' and pa.options_values_id = poval.products_options_values_id and popt.language_id = '" . $languages_id . "' and poval.language_id = '" . $languages_id . "'");
+                            $attribute_values = $db->Execute($attributes_query);
+                        } else {
+                            $attributes_values = $db->Execute("select popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix from " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_OPTIONS_VALUES . " poval, " . TABLE_PRODUCTS_ATTRIBUTES . " pa where pa.products_id = '" . $order->products[$i]['id'] . "' and pa.options_id = '" . $order->products[$i]['attributes'][$j]['option_id'] . "' and pa.options_id = popt.products_options_id and pa.options_values_id = '" . $order->products[$i]['attributes'][$j]['value_id'] . "' and pa.options_values_id = poval.products_options_values_id and popt.language_id = '" . $languages_id . "' and poval.language_id = '" . $languages_id . "'");
+                        }
+
+
+                        $products_ordered_attributes .= "\n\t" . $attributes_values->fields['products_options_name'] . ' ' . $attributes_values->fields['products_options_values_name'];
                     }
+                }
 
 
-                    $products_ordered_attributes .= "\n\t" . $attributes_values->fields['products_options_name'] . ' ' . $attributes_values->fields['products_options_values_name'];
+                $products_ordered .= $order->products[$i]['qty'] . ' x ' . $order->products[$i]['name'] . ' (' . $order->products[$i]['model'] . ') = ' . $currencies->display_price($order->products[$i]['final_price'],
+                        $order->products[$i]['tax'], $order->products[$i]['qty']) . $products_ordered_attributes . "\n";
+                error_log('roundProductEnd'.$i);
+
+            }
+            error_log('after_products');
+            $email_order = STORE_NAME . "\n" .
+                EMAIL_SEPARATOR . "\n" .
+                EMAIL_TEXT_ORDER_NUMBER . ' ' . $order_id . "\n" .
+                EMAIL_TEXT_DATE_ORDERED . ' ' . strftime(DATE_FORMAT_LONG) . "\n\n";
+
+            if ($order->info['comments']) {
+                $email_order .= zen_db_output($order->info['comments']) . "\n\n";
+            }
+
+            $email_order .= EMAIL_TEXT_PRODUCTS . "\n" .
+                EMAIL_SEPARATOR . "\n" .
+                $products_ordered .
+                EMAIL_SEPARATOR . "\n";
+
+            if ($order->content_type != 'virtual') {
+                $email_order .= "\n" . EMAIL_TEXT_DELIVERY_ADDRESS . "\n" .
+                    EMAIL_SEPARATOR . "\n" .
+                    zen_address_label($customer_id, $sendto, 0, '', "\n") . "\n";
+            }
+
+            $email_order .= "\n" . EMAIL_TEXT_BILLING_ADDRESS . "\n" .
+                EMAIL_SEPARATOR . "\n" .
+                zen_address_label($customer_id, $billto, 0, '', "\n") . "\n\n";
+
+
+            if (is_object($payment)) {
+                $email_order .= EMAIL_TEXT_PAYMENT_METHOD . "\n" .
+                    EMAIL_SEPARATOR . "\n";
+                $payment_class = $$payment;
+                $email_order .= $payment_class->title . "\n\n";
+                if ($payment_class->email_footer) {
+                    $email_order .= $payment_class->email_footer . "\n\n";
                 }
             }
+            error_log('completed' . var_export($_SESSION['already_completed'], true));
+            if (!$_SESSION['already_completed']) {
+                $languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
+                $langCode = (strtolower($languageCode->fields['code']) == 'se') ? 'sv' : $languageCode->fields['code'];
 
+                if (!defined('BILLMATE_LANGUAGE')) {
+                    define('BILLMATE_LANGUAGE', $langCode);
+                }
+                if (!defined('BILLMATE_SERVER')) {
+                    define('BILLMATE_SERVER', '2.1.7');
+                }
 
-            $products_ordered .= $order->products[$i]['qty'] . ' x ' . $order->products[$i]['name'] . ' (' . $order->products[$i]['model'] . ') = ' . $currencies->display_price($order->products[$i]['final_price'], $order->products[$i]['tax'], $order->products[$i]['qty']) . $products_ordered_attributes . "\n";
-        }
-
-        $email_order = STORE_NAME . "\n" .
-            EMAIL_SEPARATOR . "\n" .
-            EMAIL_TEXT_ORDER_NUMBER . ' ' . $order_id . "\n" .
-            EMAIL_TEXT_DATE_ORDERED . ' ' . strftime(DATE_FORMAT_LONG) . "\n\n";
-
-        if ($order->info['comments']) {
-            $email_order .= zen_db_output($order->info['comments']) . "\n\n";
-        }
-
-        $email_order .= EMAIL_TEXT_PRODUCTS . "\n" .
-            EMAIL_SEPARATOR . "\n" .
-            $products_ordered .
-            EMAIL_SEPARATOR . "\n";
-
-        if ($order->content_type != 'virtual') {
-            $email_order .= "\n" . EMAIL_TEXT_DELIVERY_ADDRESS . "\n" .
-                EMAIL_SEPARATOR . "\n" .
-                zen_address_label($customer_id, $sendto, 0, '', "\n") . "\n";
-        }
-
-        $email_order .= "\n" . EMAIL_TEXT_BILLING_ADDRESS . "\n" .
-            EMAIL_SEPARATOR . "\n" .
-            zen_address_label($customer_id, $billto, 0, '', "\n") . "\n\n";
-
-
-        if (is_object($payment)) {
-            $email_order .= EMAIL_TEXT_PAYMENT_METHOD . "\n" .
-                EMAIL_SEPARATOR . "\n";
-            $payment_class = $$payment;
-            $email_order .= $payment_class->title . "\n\n";
-            if ($payment_class->email_footer) {
-                $email_order .= $payment_class->email_footer . "\n\n";
-            }
-        }
-        if(!$already_completed ){
-            $languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
-            $langCode  = (strtolower($languageCode->fields['code']) == 'se') ? 'sv' : $languageCode->fields['code'];
-
-            if(!defined('BILLMATE_LANGUAGE')) define('BILLMATE_LANGUAGE',$langCode);
-            if(!defined('BILLMATE_SERVER')) define('BILLMATE_SERVER','2.1.7');
-
-            $k = new BillMate($eid,$secret,$ssl, $this->billmate_testmode,$debug);
-            $result1 = (object)$k->UpdatePayment( array('PaymentData'=> array("number"=>$_DATA['number'], "orderid"=>(string)$_DATA['orderid'])));
-        }
-
-        if(is_string($result1) || (isset($result1->message) && is_object($result1))){
-            zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
-                'payment_error=billmatecardpay&error='.$result1->message,
-                'SSL', true, false));
-        } elseif($already_completed || is_object($result1)) {
-            $billmatecard_called_api = true;
-            $_SESSION['billmatecard_called_api'] = $billmatecard_called_api;
-            $_SESSION['billmatecard_api_result'] =  $result1;
-
-            // insert address in address book to get correct address in
-            // confirmation mail (or fetch correct address from address book
-            // if it exists)
-
-            $q = "select countries_id from " . TABLE_COUNTRIES .
-                " where countries_iso_code_2 = 'SE'";
-
-            $check_country = zen_db_perform($q);
-
-            $cid = $check_country->fields['countries_id'];
-
-            $q = "select address_book_id from " . TABLE_ADDRESS_BOOK .
-                " where customers_id = '" . (int)$customer_id .
-                "' and entry_firstname = '" . $order->delivery['firstname'] .
-                "' and entry_lastname = '" . $order->delivery['lastname'] .
-                "' and entry_street_address = '" . $order->delivery['street_address'] .
-                "' and entry_postcode = '" . $order->delivery['postcode'] .
-                "' and entry_city = '" . $order->delivery['city'] .
-                "' and entry_company = '" . $order->delivery['company'] . "'";
-            $check_address = $db->Execute($q);
-            if($check_address->RecordCount() > 0) {
-                $sendto = $billto = $check_address->fields['address_book_id'];
-            }else {
-                $sql_data_array =
-                    array('customers_id' => $customer_id,
-                        'entry_firstname' => $order->delivery['firstname'],
-                        'entry_lastname' => $order->delivery['lastname'],
-                        'entry_company' => $order->delivery['company'],
-                        'entry_street_address' => $order->delivery['street_address'],
-                        'entry_postcode' => $order->delivery['postcode'],
-                        'entry_city' => $order->delivery['city'],
-                        'entry_country_id' => $cid);
-
-                zen_db_perform(TABLE_ADDRESS_BOOK, $sql_data_array);
-                $sendto = $billto = $db->Insert_ID();
+                $k = new BillMate($eid, $secret, $ssl, $this->billmate_testmode, $debug);
+                $result1 = (object)$k->UpdatePayment(array(
+                    'PaymentData' => array(
+                        "number" => $_DATA['number'],
+                        "orderid" => (string)$_DATA['orderid']
+                    )
+                ));
             }
 
-            if(!$already_completed){
-                $order->billmateref=$result1->number;
-                $payment['tan']=$result1->number;
+            if (is_string($result1) || (isset($result1->message) && is_object($result1))) {
+                zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT,
+                    'payment_error=billmatecardpay&error=' . $result1->message,
+                    'SSL', true, false));
+            } elseif ($_SESSION['already_completed'] || is_object($result1)) {
+                $billmatecard_called_api = true;
+                $_SESSION['billmatecard_called_api'] = $billmatecard_called_api;
+                $_SESSION['billmatecard_api_result'] = $result1;
+
+                // insert address in address book to get correct address in
+                // confirmation mail (or fetch correct address from address book
+                // if it exists)
+
+                $q = "select countries_id from " . TABLE_COUNTRIES .
+                    " where countries_iso_code_2 = 'SE'";
+
+                $check_country = $db->Execute($q);
+
+                $cid = $check_country->fields['countries_id'];
+
+                $q = "select address_book_id from " . TABLE_ADDRESS_BOOK .
+                    " where customers_id = '" . (int)$_SESSION['customer_id'] .
+                    "' and entry_firstname = '" . $order->delivery['firstname'] .
+                    "' and entry_lastname = '" . $order->delivery['lastname'] .
+                    "' and entry_street_address = '" . $order->delivery['street_address'] .
+                    "' and entry_postcode = '" . $order->delivery['postcode'] .
+                    "' and entry_city = '" . $order->delivery['city'] .
+                    "' and entry_company = '" . $order->delivery['company'] . "'";
+                $check_address = $db->Execute($q);
+                if ($check_address->RecordCount() > 0) {
+                    $sendto = $billto = $check_address->fields['address_book_id'];
+                } else {
+                    $sql_data_array =
+                        array(
+                            'customers_id' => $customer_id,
+                            'entry_firstname' => $order->delivery['firstname'],
+                            'entry_lastname' => $order->delivery['lastname'],
+                            'entry_company' => $order->delivery['company'],
+                            'entry_street_address' => $order->delivery['street_address'],
+                            'entry_postcode' => $order->delivery['postcode'],
+                            'entry_city' => $order->delivery['city'],
+                            'entry_country_id' => $cid
+                        );
+
+                    zen_db_perform(TABLE_ADDRESS_BOOK, $sql_data_array);
+                    $sendto = $billto = $db->Insert_ID();
+                }
+
+                if (!$already_completed) {
+                    $order->billmateref = $result1->number;
+                    $payment['tan'] = $result1->number;
+                }
+
+                zen_mail($order->customer['firstname'] . ' ' . $order->customer['lastname'],
+                    $order->customer['email_address'], EMAIL_TEXT_SUBJECT, $email_order, STORE_OWNER,
+                    STORE_OWNER_EMAIL_ADDRESS);
+                unset($_SESSION['billmate_ot']);
+                // send emails to other people
+                if (SEND_EXTRA_ORDER_EMAILS_TO != '') {
+                    zen_mail('', SEND_EXTRA_ORDER_EMAILS_TO, EMAIL_TEXT_SUBJECT, $email_order, STORE_OWNER,
+                        STORE_OWNER_EMAIL_ADDRESS);
+                }
+                // Insert transaction # into history file
+
+                $sql_data_array = array(
+                    'orders_id' => $_DATA['orderid'],
+                    'orders_status_id' => MODULE_PAYMENT_BILLMATE_ORDER_STATUS_ID,
+                    'date_added' => 'now()',
+                    'customer_notified' => 0,
+                    'comments' => ('Billmate_IPN')
+                );
+                zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+
+                $sql_data_array = array(
+                    'orders_id' => $_DATA['orderid'],
+                    'orders_status_id' => MODULE_PAYMENT_BILLMATE_ORDER_STATUS_ID,
+                    'date_added' => 'now()',
+                    'customer_notified' => 0,
+                    'comments' => ('Accepted by Billmate ' . date("Y-m-d G:i:s") . ' Invoice #: ' . $_DATA['number'])
+                );
+                zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
+                $db->Execute("update " . TABLE_ORDERS . " set orders_status = '" . (MODULE_PAYMENT_BILLMATE_ORDER_STATUS_ID) . "', last_modified = now() where orders_id = '" . (int)$_DATA['orderid'] . "'");
+
+                // load the after_process function from the payment modules
+                $this->after_process();
+
+                $_SESSION['cart']->reset(true);
+
+                // unregister session variables used during checkout
+                unset($_SESSION['sendto']);
+                unset($_SESSION['billto']);
+                unset($_SESSION['shipping']);
+                unset($_SESSION['payment']);
+                unset($_SESSION['comments']);
+
+                unset($_SESSION['cart_billmate_card_ID']);
+
+                zen_redirect(zen_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL'));
+
+                return false;
             }
-            
-            zen_mail($order->customer['firstname'] . ' ' . $order->customer['lastname'], $order->customer['email_address'], EMAIL_TEXT_SUBJECT, $email_order, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
-            unset($_SESSION['billmate_ot']);
-            // send emails to other people
-            if (SEND_EXTRA_ORDER_EMAILS_TO != '') {
-                zen_mail('', SEND_EXTRA_ORDER_EMAILS_TO, EMAIL_TEXT_SUBJECT, $email_order, STORE_OWNER, STORE_OWNER_EMAIL_ADDRESS);
-            }
-            // Insert transaction # into history file
 
-            $sql_data_array = array('orders_id' => $_DATA['orderid'],
-                'orders_status_id' => MODULE_PAYMENT_BILLMATE_ORDER_STATUS_ID,
-                'date_added' => 'now()',
-                'customer_notified' => 0,
-                'comments' => ('Billmate_IPN')
-            );
-            zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-
-            $sql_data_array = array('orders_id' => $_DATA['orderid'],
-                'orders_status_id' => MODULE_PAYMENT_BILLMATE_ORDER_STATUS_ID,
-                'date_added' => 'now()',
-                'customer_notified' => 0,
-                'comments' => ('Accepted by Billmate ' . date("Y-m-d G:i:s") .' Invoice #: ' . $_DATA['number'])
-            );
-            zen_db_perform(TABLE_ORDERS_STATUS_HISTORY, $sql_data_array);
-            $db->Execute("update " . TABLE_ORDERS . " set orders_status = '" . (MODULE_PAYMENT_BILLMATE_ORDER_STATUS_ID ) . "', last_modified = now() where orders_id = '" . (int)$_DATA['orderid'] . "'");
-
-            // load the after_process function from the payment modules
-            $this->after_process();
-
-            $cart->reset(true);
-
-            // unregister session variables used during checkout
-            unset($_SESSION['sendto']);
-            unset($_SESSION['billto']);
-            unset($_SESSION['shipping']);
-            unset($_SESSION['payment']);
-            unset($_SESSION['comments']);
-
-            unset($_SESSION['cart_billmate_card_ID']);
-
-            zen_redirect(zen_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL'));
-
-            return false;
+        } catch(Exception $e){
+            error_log('error'.$e->getMessage());
         }
-
-
     }
 
     function after_process() {

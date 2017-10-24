@@ -433,10 +433,10 @@ class BillmateUtils {
         }
         else if ($connection == 'SSL') {
             if (ENABLE_SSL == true) {
-                $link = HTTPS_SERVER . DIR_WS_HTTPS_CATALOG;
+                $link = HTTPS_SERVER ;
             }
             else {
-                $link = HTTP_SERVER . DIR_WS_HTTP_CATALOG;
+                $link = HTTP_SERVER ;
             }
         }
         else {

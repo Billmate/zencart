@@ -13,10 +13,12 @@ require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/Billmate.php');
 require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/utf8.php');
 
 function partpay($order_id){
-    global $customer_id, $currency, $currencies, $sendto, $billto,
-           $pcbillmate,$insert_id, $languages_id, $language_id, $language, $currency, $cart_billmate_card_ID,$billmate_pno,$pclass,$db;
+    global $customer_id,  $currencies, $sendto, $billto,
+           $insert_id, $languages_id, $language_id, $language, $currency, $cart_billmate_card_ID,$billmate_pno,$pclass,$db;
 
     $pcbillmate = $_SESSION['pcbillmate_ot'];
+    $currency = $_SESSION['currency'];
+
 
     require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
     include_once(DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/payment/pcbillmate.php');
@@ -286,6 +288,7 @@ function invoice($order_id){
            $billmate_ot,$insert_id, $languages_id, $language_id, $language, $currency, $cart_billmate_card_ID,$billmate_pno,$billmate_billing,$db;
 
     $billmate_ot = $_SESSION['billmate_ot'];
+    $currency = $_SESSION['currency'];
 
     require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
     include_once(DIR_WS_LANGUAGES . $_SESSION['language'] . '/modules/payment/pcbillmate.php');

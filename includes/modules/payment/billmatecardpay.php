@@ -224,7 +224,7 @@ class billmatecardpay {
                           if(!window.jQuery){
                           	var jq = document.createElement("script");
                           	jq.type = "text/javascript";
-                          	jq.src = "'.HTTP_SERVER.DIR_WS_HTTP_CATALOG.'jquery.js";
+                          	jq.src = "'.HTTP_SERVER.'jquery.js";
                           	document.getElementsByTagName("head")[0].appendChild(jq);
                           }
 </script>');
@@ -284,17 +284,19 @@ class billmatecardpay {
 											'value' => $shipping_value,
 											'sort_order' => $GLOBALS[$class]->sort_order);
 			  } else {
-				  if ($GLOBALS[$class]->enabled) {
-					for ($i=0, $n=sizeof($GLOBALS[$class]->output); $i<$n; $i++) {
+				  $GLOBALS[$class]->process();
+				  for ($i=0, $n=sizeof($GLOBALS[$class]->output); $i<$n; $i++) {
+
+
 					  if (zen_not_null($GLOBALS[$class]->output[$i]['title']) && zen_not_null($GLOBALS[$class]->output[$i]['text'])) {
-						$order_totals[] = array('code' => $GLOBALS[$class]->code,
-												'title' => $GLOBALS[$class]->output[$i]['title'],
-												'text' => $GLOBALS[$class]->output[$i]['text'],
-												'value' => $GLOBALS[$class]->output[$i]['value'],
-												'sort_order' => $GLOBALS[$class]->sort_order);
+						  $order_totals[] = array('code' => $GLOBALS[$class]->code,
+							  'title' => $GLOBALS[$class]->output[$i]['title'],
+							  'text' => $GLOBALS[$class]->output[$i]['text'],
+							  'value' => $GLOBALS[$class]->output[$i]['value'],
+							  'sort_order' => $GLOBALS[$class]->sort_order);
 					  }
-					}
 				  }
+				  //$GLOBALS[$class]->$class();
 			  }
             }
           }
@@ -511,7 +513,7 @@ class billmatecardpay {
                           if(!window.jQuery){
                           	var jq = document.createElement("script");
                           	jq.type = "text/javascript";
-                          	jq.src = "'.HTTP_SERVER.DIR_WS_HTTP_CATALOG.'jquery.js";
+                          	jq.src = "'.HTTP_SERVER.'jquery.js";
                             jq.onload = redirectLink;
                           	document.getElementsByTagName("head")[0].appendChild(jq);
                           } else {
@@ -758,7 +760,7 @@ class billmatecardpay {
 			return $result1;
 		}
 		else {
-			zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
+			zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT,
                     'payment_error=billmatecardpay&error=' . ($result1->message),
                     'SSL', true, false));
 		}
@@ -779,7 +781,7 @@ class billmatecardpay {
 		$_DATA['order_id'] = $_DATA['orderid'];
 
         if(!isset($_DATA['status']) || $_DATA['status'] != 'Paid'){
-            zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,'','SSL', true, false).'?payment_error=billmatecardpay&error='.rawurlencode(MODULE_PAYMENT_BILLMATECARDPAY_FAILED));
+            zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT,'','SSL', true, false).'?payment_error=billmatecardpay&error='.rawurlencode(MODULE_PAYMENT_BILLMATECARDPAY_FAILED));
             return;
         }
         
@@ -928,7 +930,7 @@ class billmatecardpay {
 			$result1 = (object)$_DATA;
 		}
         if(is_string($result1) || (isset($result1->message) && is_object($result1))){
-            zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
+            zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT,
                     'payment_error=billmatecardpay&error='.$result1->message,
                     'SSL', true, false));
 		} elseif($already_completed || is_object($result1)) {

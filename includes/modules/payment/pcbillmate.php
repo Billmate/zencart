@@ -71,7 +71,7 @@ class pcbillmate {
         }
 
         $currencyValid = array('SEK' );
-        $countryValid  = array('SE');
+        $countryValid  = array('se');
         $enabled_countries = explode(',',
                                 trim( 
                                     strtolower(MODULE_PAYMENT_PCBILLMATE_ENABLED_COUNTRYIES),
@@ -246,7 +246,7 @@ class pcbillmate {
 	    {
 		    list($module, $method) = explode('_', $shipping['id']);
 
-		    require(DIR_WS_CLASSES.'shipping.php');
+		    require_once(DIR_WS_CLASSES.'shipping.php');
 		    $shipping_modules = new shipping;
 			// Get shipping quote for set module
 		    $shipp = $shipping_modules->quote($method, $module);
@@ -260,7 +260,7 @@ class pcbillmate {
             $langCode = 'en';
         $langCode = $languageCode->fields['code'] == 'se' ? 'sv' : $languageCode->fields['code'];
 
-        $pclasses = BillmateUtils::calc_monthly_cost($total, MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, $order->billing['country']['iso_code_2'], 0,$langCode,MODULE_PAYMENT_PCBILLMATE_MONTH);
+        $pclasses = BillmateUtils::calc_monthly_cost($total, MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, strtolower($order->billing['country']['iso_code_2']), 0,$langCode,MODULE_PAYMENT_PCBILLMATE_MONTH);
         
         $lowest = BillmateUtils::get_cheapest_pclass($pclasses,$total);
 
@@ -295,7 +295,7 @@ class pcbillmate {
                           if(!window.jQuery){
 	                          var jq = document.createElement("script");
 	                          jq.type = "text/javascript";
-	                          jq.src = "'.HTTP_SERVER.DIR_WS_HTTP_CATALOG.'jquery.js";
+	                          jq.src = "'.HTTP_SERVER.'/jquery.js";
 	                          document.getElementsByTagName("head")[0].appendChild(jq);
                           }
 </script>'.$js.$error),
@@ -361,7 +361,7 @@ class pcbillmate {
 
         if (!empty($errors)) {
             $error_message = implode(', ', $errors);
-            zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=pcbillmate&error='.$error_message, 'SSL'));
+            zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=pcbillmate&error='.$error_message, 'SSL'));
         }
 
         $pno = $this->pcbillmate_pnum = $_POST['pcbillmate_pnum'];
@@ -383,7 +383,7 @@ class pcbillmate {
 		$result = (object)$k->GetAddress(array('pno'=>$pno));
 
 		if (isset($result->message) || empty($result) || !is_object($result)) {
-            zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
+            zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT,
                     'payment_error=pcbillmate&error='.strip_tags( utf8_encode($result->message) ),
                     'SSL', true, false));
         }
@@ -479,7 +479,7 @@ class pcbillmate {
                 $WrongAddress = $code;
                 global $messageStack;
                 $_SESSION['WrongAddress'] = $WrongAddress;
-                zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=pcbillmate&error=invalidaddress', 'SSL'));
+                zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=pcbillmate&error=invalidaddress', 'SSL'));
 	        }else{
 	            if(!match_usernamevp( $fullname , $apiName)){
                     if($result->firstname == "") {
@@ -543,6 +543,8 @@ class pcbillmate {
     function confirmation() {
         global $cartID, $cart_billmate_card_ID, $customer_id,  $order, $order_total_modules, $currencies, $db;
         $languages_id = $_SESSION['languages_id'];
+        //$order_total_modules = $_SESSION['order_total_modules'];
+        $customer_id = $_SESSION['customer_id'];
         if (isset($_SESSION['cart_billmate_card_ID'])) {
             $order_id = $_SESSION['cart_billmate_card_ID'];
 
@@ -582,17 +584,19 @@ class pcbillmate {
                             'value' => $shipping_value,
                             'sort_order' => $GLOBALS[$class]->sort_order);
                     } else {
-                        if ($GLOBALS[$class]->enabled) {
-                            for ($i=0, $n=sizeof($GLOBALS[$class]->output); $i<$n; $i++) {
-                                if (zen_not_null($GLOBALS[$class]->output[$i]['title']) && zen_not_null($GLOBALS[$class]->output[$i]['text'])) {
-                                    $order_totals[] = array('code' => $GLOBALS[$class]->code,
-                                        'title' => $GLOBALS[$class]->output[$i]['title'],
-                                        'text' => $GLOBALS[$class]->output[$i]['text'],
-                                        'value' => $GLOBALS[$class]->output[$i]['value'],
-                                        'sort_order' => $GLOBALS[$class]->sort_order);
-                                }
+                        $GLOBALS[$class]->process();
+                        for ($i=0, $n=sizeof($GLOBALS[$class]->output); $i<$n; $i++) {
+
+
+                            if (zen_not_null($GLOBALS[$class]->output[$i]['title']) && zen_not_null($GLOBALS[$class]->output[$i]['text'])) {
+                                $order_totals[] = array('code' => $GLOBALS[$class]->code,
+                                    'title' => $GLOBALS[$class]->output[$i]['title'],
+                                    'text' => $GLOBALS[$class]->output[$i]['text'],
+                                    'value' => $GLOBALS[$class]->output[$i]['value'],
+                                    'sort_order' => $GLOBALS[$class]->sort_order);
                             }
                         }
+                        //$GLOBALS[$class]->$class();
                     }
                 }
             }
@@ -746,7 +750,7 @@ class pcbillmate {
         $pclass = $this->pcbillmate_pclass;
         $_SESSION['pclass'] = $pclass;
 
-        $order_totals = $order_total_modules->modules;
+        $order_totals = $_SESSION['order_total_modules']->modules;
 
         if (is_array($order_totals)) {
             reset($order_totals);
@@ -823,7 +827,7 @@ class pcbillmate {
                           if(!window.jQuery){
                           	var jq = document.createElement("script");
                           	jq.type = "text/javascript";
-                          	jq.src = "' . HTTP_SERVER . DIR_WS_HTTP_CATALOG . 'jquery.js";
+                          	jq.src = "' . HTTP_SERVER .  '/jquery.js";
                             jq.onload = redirectLink;
                           	document.getElementsByTagName("head")[0].appendChild(jq);
                           } else {
@@ -1107,7 +1111,7 @@ class pcbillmate {
 
             billmate_remove_order($_DATA['orderid'],true);
             unset($_SESSION['cart_billmate_card_ID']);
-            zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
+            zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT,
                 'payment_error=billmate_invoice&error=Please try again.',
                 'SSL', true, false));
             return;
@@ -1234,7 +1238,7 @@ class pcbillmate {
                 $email_order .= $payment_class->email_footer . "\n\n";
             }
         }
-        if(!$already_completed ){
+        if(!$_SESSION['already_completed'] ){
             $languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
             $langCode  = (strtolower($languageCode->fields['code']) == 'se') ? 'sv' : $languageCode->fields['code'];
 
@@ -1246,10 +1250,10 @@ class pcbillmate {
         }
 
         if(is_string($result1) || (isset($result1->message) && is_object($result1))){
-            zen_redirect(BillmateUtils::error_link(FILENAME_CHECKOUT_PAYMENT,
+            zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT,
                 'payment_error=billmatecardpay&error='.$result1->message,
                 'SSL', true, false));
-        } elseif($already_completed || is_object($result1)) {
+        } elseif($_SESSION['already_completed'] || is_object($result1)) {
             $billmatecard_called_api = true;
             $_SESSION['billmatecard_called_api'] = $billmatecard_called_api;
             $_SESSION['billmatecard_api_result'] = $result1;
@@ -1278,7 +1282,7 @@ class pcbillmate {
                 $sendto = $billto = $check_address->fields['address_book_id'];
             }else {
                 $sql_data_array =
-                    array('customers_id' => $customer_id,
+                    array('customers_id' => $_SESSION['customer_id'],
                         'entry_firstname' => $order->delivery['firstname'],
                         'entry_lastname' => $order->delivery['lastname'],
                         'entry_company' => $order->delivery['company'],
@@ -1325,7 +1329,7 @@ class pcbillmate {
             // load the after_process function from the payment modules
             $this->after_process();
 
-            $cart->reset(true);
+            $_SESSION['cart']->reset(true);
 
             // unregister session variables used during checkout
             unset($_SESSION['sendto']);
