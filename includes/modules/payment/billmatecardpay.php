@@ -527,11 +527,12 @@ class billmatecardpay {
         return $process_button_string;
     }
 	function doInvoice($add_order = false ){
-		 global $order, $customer_id, $currency, $currencies, $sendto, $billto,
+		 global $order, $customer_id, $currencies, $sendto, $billto,
 				   $billmatecardpay_ot, $billmatecardpay_livemode, $billmatecardpay_testmode,$insert_id,
-				   $languages_id, $language_id, $language, $currency, $cart_billmate_card_ID,$db;
+				   $languages_id, $language_id, $language, $cart_billmate_card_ID,$db;
 
 		$billmatecardpay_ot = $_SESSION['billmatecardpay_ot'];
+		$currency = $_SESSION['currency'];
         $livemode = $this->billmatecardpay_livemode;
 		require_once(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
 		if( empty($_POST ) ) $_POST = $_GET;

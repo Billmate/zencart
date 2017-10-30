@@ -109,7 +109,8 @@ function partpay($order_id){
     // discount.
 
     $extra = $pcbillmate['code_entries'];
-
+    $shippingPrice = 0;
+    $shippingTaxRate = 0;
     //end hack
     for ($j=0 ; $j<$extra ; $j++) {
         $size = $pcbillmate["code_size_".$j];
@@ -270,7 +271,7 @@ function partpay($order_id){
 
         unset($_SESSION['cart_billmate_card_ID']);
         zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT,
-            'payment_error=pcbillmate&error=' . utf8_encode($result1->message)));
+            'payment_error=pcbillmate&error_message=' . utf8_encode($result1->message)));
         exit;
     } else {
         if($result1->status == 'WaitingForBankIDIdentification' || $result1->status == 'WaitingForBankIDIdentificationForAddressCheck'){
@@ -384,6 +385,8 @@ function invoice($order_id){
     $extra = $billmate_ot['code_entries'];
 
     //end hack
+    $shippingPrice = 0;
+    $shippingTaxRate = 0;
     for ($j=0 ; $j<$extra ; $j++) {
         $size = $billmate_ot["code_size_".$j];
         for ($i=0 ; $i<$size ; $i++) {
@@ -553,7 +556,7 @@ function invoice($order_id){
         billmate_remove_order($order_id,true);
         unset($_SESSION['cart_billmate_card_ID']);
         zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT,
-            'payment_error=billmate_invoice&error=' . utf8_encode($result1->message)));
+            'payment_error=billmateinvoice&error_message=' . utf8_encode($result1->message)));
         exit;
     } else {
         if($result1->status == 'WaitingForBankIDIdentification' || $result1->status == 'WaitingForBankIDIdentificationForAddressCheck'){

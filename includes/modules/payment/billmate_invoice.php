@@ -525,7 +525,7 @@ class billmate_invoice {
         global $cartID, $cart_billmate_card_ID, $customer_id, $order, $order_total_modules, $currencies,$db;
         //$order_total_modules = $_SESSION['order_total_modules'];
         $customer_id = $_SESSION['customer_id'];
-
+        $order = $_SESSION['order'];
         $languages_id = $_SESSION['languages_id'];
         if (isset($_SESSION['cart_billmate_card_ID'])) {
             $order_id = $_SESSION['cart_billmate_card_ID'];
@@ -1111,7 +1111,7 @@ class billmate_invoice {
 
                 unset($_SESSION['cart_billmate_card_ID']);
                 zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT,
-                    'payment_error=billmate_invoice&error=Please try again.',
+                    'payment_error=billmate_invoice&error_message=Please try again.',
                     'SSL', true, false));
 
 

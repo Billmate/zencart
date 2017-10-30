@@ -494,7 +494,9 @@ class billmatebank {
 				   $billmatebank_ot, $billmatebank_livemode, $billmatebank_testmode,$insert_id,$cart_billmate_bank_ID,$db;
 		$languages_id = $_SESSION['languages_id'];
 		$billmatebank_ot = $_SESSION['billmatebank_ot'];
+		$currency = $_SESSION['currency'];
         $livemode = $this->billmatebank_livemode;
+
 		require(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
 		if( empty($_POST ) ) $_POST = $_GET;
         //Set the right Host and Port
@@ -675,7 +677,7 @@ class billmatebank {
 											"recurring" => "",
 											"recurringnr" => "",
 											"accepturl" => zen_href_link(FILENAME_CHECKOUT_PROCESS, '', 'SSL'),
-											"cancelurl" => zen_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL').'?cancel=true&payment_error=billmatebank&error='.rawurlencode(MODULE_PAYMENT_BILLMATEBANK_CANCEL),
+											"cancelurl" => zen_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL').'?cancel=true&payment_error=billmatebank&error_message='.rawurlencode(MODULE_PAYMENT_BILLMATEBANK_CANCEL),
 											"callbackurl" => zen_href_link('ext/bankpay_ipn.php', '', 'SSL',false,false,true), //'http://api.billmate.se/callback.php',
 									);
 		$invoiceValues['Customer'] = array(	'customernr'=> (string)$customer_id,
