@@ -616,6 +616,7 @@ class billmate_invoice {
                 'billing_country' => $order->billing['country']['title'],
                 'billing_address_format_id' => $order->billing['format_id'],
                 'payment_method' => $order->info['payment_method'],
+                'shipping_method' => $order->info['shipping_method'],
                 'cc_type' => $order->info['cc_type'],
                 'cc_owner' => $order->info['cc_owner'],
                 'cc_number' => $order->info['cc_number'],
