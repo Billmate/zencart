@@ -334,6 +334,7 @@ class pcbillmate {
 
     function pre_confirmation_check() {
         global $pcbillmate_testmode, $order, $GA_OLD, $KRED_SE_PNO, $user_billing,$billmate_pno,$db;
+        $order = $_SESSION['order'];
         $languages_id = $_SESSION['languages_id'];
         //Set the right Host and Port
         $livemode = $this->pcbillmate_testmode == false;

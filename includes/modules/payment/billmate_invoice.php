@@ -329,6 +329,7 @@ class billmate_invoice {
     function pre_confirmation_check() {
         global $billmate_testmode, $billmate_livemode, $order, $GA_OLD, $KRED_SE_PNO, $user_billing, $languages_id,$billmate_pno,$db;
 
+        $order = $_SESSION['order'];
         //Livemode to set the right Host and Port
         $livemode = $this->billmate_livemode;
 
