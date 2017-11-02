@@ -334,7 +334,7 @@ class pcbillmate {
 
     function pre_confirmation_check() {
         global $pcbillmate_testmode, $order, $GA_OLD, $KRED_SE_PNO, $user_billing,$billmate_pno,$db;
-        $order = $_SESSION['order'];
+
         $languages_id = $_SESSION['languages_id'];
         //Set the right Host and Port
         $livemode = $this->pcbillmate_testmode == false;
@@ -488,12 +488,10 @@ class pcbillmate {
 	        }else{
 	            if(!match_usernamevp( $fullname , $apiName)){
                     if($result->firstname == "") {
-                        $this->pcbillmate_fname = $order->billing['firstname'];
-                        $this->pcbillmate_lname = $order->billing['lastname'];
+                        $this->pcbillmate_name = $order->billing['name'];
 						$this->pccompany_name   = $result->lastname;
                     }else {
-                        $this->pcbillmate_fname = $result->firstname;
-                        $this->pcbillmate_lname = $result->lastname;
+                        $this->pcbillmate_name = $result->firstname.' '.$result->lastname;
 						$this->pccompany_name   = '';
                     }
                 }
@@ -502,21 +500,11 @@ class pcbillmate {
                 $this->pcbillmate_city = $result->city;
                 $country = $db->Execute("select countries_id from " . TABLE_COUNTRIES . " where countries_iso_code_2 = '" .$result->country . "'");
                 global $customer_id;
-                $data = array(
-                    'entry_firstname'       =>$this->pcbillmate_fname,
-                    'entry_lastname'        =>$this->pcbillmate_lname,
-                    'entry_street_address'  =>$this->pcbillmate_street,
-                    'entry_postcode'        =>$this->pcbillmate_postno,
-                    'entry_city'            =>$this->pcbillmate_city,
-                    'entry_country_id'      =>$country->fields['countries_id'],
-                    'customers_id'          => $customer_id
-                );
+
 
                 
-                $order->delivery['firstname'] = $this->pcbillmate_fname;
-                $order->billing['firstname'] = $this->pcbillmate_fname;
-                $order->delivery['lastname'] = $this->pcbillmate_lname;
-                $order->billing['lastname'] = $this->pcbillmate_lname;
+                $order->delivery['name'] = $this->pcbillmate_name;
+                $order->billing['name'] = $this->pcbillmate_name;
                 $order->delivery['company'] = $this->pccompany_name;
                 $order->billing['company'] = $this->pccompany_name;
                 $order->delivery['street_address'] = $this->pcbillmate_street;

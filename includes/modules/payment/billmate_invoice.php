@@ -329,7 +329,7 @@ class billmate_invoice {
     function pre_confirmation_check() {
         global $billmate_testmode, $billmate_livemode, $order, $GA_OLD, $KRED_SE_PNO, $user_billing, $languages_id,$billmate_pno,$db;
 
-        $order = $_SESSION['order'];
+        
         //Livemode to set the right Host and Port
         $livemode = $this->billmate_livemode;
 
@@ -417,12 +417,12 @@ class billmate_invoice {
         $matchedLast  = array_intersect($apilast, $lastArr );
         $apiMatchedName   = !empty($matchedFirst) && !empty($matchedLast);
 
-		$addressNotMatched = !isEqual($result->street, $order->billing['street_address'] ) ||
+		$addressNotMatched = !isEqual($fullname,$apiName) || !isEqual($result->street, $order->billing['street_address'] ) ||
 		    !isEqual($result->zip, $order->billing['postcode']) || 
 		    !isEqual($result->city, $order->billing['city']) || 
 		    !isEqual($result->country, $order->billing['country']['iso_code_2']);
 
-        $shippingAndBilling =  !$apiMatchedName ||
+        $shippingAndBilling =  !$apiMatchedName || !isEqual($order->billing['name'],$order->delivery['name']) ||
 		    !isEqual($order->billing['street_address'],  $order->delivery['street_address'] ) ||
 		    !isEqual($order->billing['postcode'], $order->delivery['postcode']) || 
 		    !isEqual($order->billing['city'], $order->delivery['city']) || 
@@ -482,12 +482,10 @@ class billmate_invoice {
                 zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=billmate_invoice&error=invalidaddress', 'SSL'));
 	        }else{
 			   if($result->company != "") {
-					$this->billmate_fname = $order->billing['firstname'];
-					$this->billmate_lname = $order->billing['lastname'];
+					$this->billmate_name = $order->billing['name'];
 					$this->company_name   = convertToUTF8($result->company);
 				}else {
-					$this->billmate_fname = convertToUTF8($result->firstname);
-					$this->billmate_lname = convertToUTF8($result->lastname);
+					$this->billmate_name = convertToUTF8($result->firstname).' '.convertToUTF8($result->lastname);
 					$this->company_name   = '';
 				}
 
@@ -495,10 +493,8 @@ class billmate_invoice {
                 $this->billmate_postno = $result->zip;
                 $this->billmate_city = convertToUTF8($result->city);
 				
-                $order->delivery['firstname'] = $this->billmate_fname;
-                $order->billing['firstname'] = $this->billmate_fname;
-                $order->delivery['lastname'] = $this->billmate_lname;
-                $order->billing['lastname'] = $this->billmate_lname;
+                $order->delivery['name'] = $this->billmate_name;
+                $order->billing['name'] = $this->billmate_name;
                 $order->delivery['company'] = $this->company_name;
                 $order->billing['suburb'] = $order->delivery['suburb'] = '';
                 $order->billing['company'] = $this->company_name;
@@ -526,7 +522,7 @@ class billmate_invoice {
         global $cartID, $cart_billmate_card_ID, $customer_id, $order, $order_total_modules, $currencies,$db;
         //$order_total_modules = $_SESSION['order_total_modules'];
         $customer_id = $_SESSION['customer_id'];
-        $order = $_SESSION['order'];
+        
         $languages_id = $_SESSION['languages_id'];
         if (isset($_SESSION['cart_billmate_card_ID'])) {
             $order_id = $_SESSION['cart_billmate_card_ID'];

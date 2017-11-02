@@ -62,8 +62,8 @@ require(DIR_WS_CLASSES . 'order.php');
 	$billing = $order->billing;
 	$delivery = $order->delivery;
 
-	$fullname = $billing['firstname'].' '.$billing['lastname'] .' '.$billing['company'];
-	if( empty ( $address['firstname'] ) ){
+	$fullname = $billing['name'] .' '.$billing['company'];
+	if( empty ( $address['name'] ) ){
 		$apiName = $fullname;
 	} else {
 		$apiName  = $address['firstname'].' '.$address['lastname'];
@@ -81,16 +81,16 @@ require(DIR_WS_CLASSES . 'order.php');
 		$apilast  = explode(' ', $address['lastname'] );
 	}
 
-	$matchedFirst = array_intersect($apifirst, $firstArr );
-	$matchedLast  = array_intersect($apilast, $lastArr );
+
 	$apiMatchedName   = !empty($matchedFirst) && !empty($matchedLast);
 
 	$addressNotMatched = !isEqual($address['street'], $billing['street_address'] ) ||
 	                     !isEqual($address['zip'], $billing['postcode']) ||
 	                     !isEqual($address['city'], $billing['city']) ||
-	                     !isEqual($address['country'], $billing['country']['iso_code_2']);
+	                     !isEqual($address['country'], $billing['country']['iso_code_2'] ||
+	                     !isEqual($apiName,$fullname) );
 
-	$shippingAndBilling =  !$apiMatchedName ||
+	$shippingAndBilling =  !isEqual($billing['name'],$delivery['name']) ||
 	                       !isEqual($billing['street_address'],  $delivery['street_address'] ) ||
 	                       !isEqual($billing['postcode'], $delivery['postcode']) ||
 	                       !isEqual($billing['city'], $delivery['city']) ||
@@ -103,13 +103,12 @@ require(DIR_WS_CLASSES . 'order.php');
 			$html = '<span style="line-height: 1.4em;">'.($address['firstname']).' '.$address['lastname'].'<br>'.$address['street'].'<br>'.$address['zip'].' '.$address['city'].'</span><div style="margin-top:1em;"><input type="button" value="'.MODULE_PAYMENT_BILLMATE_YES.'" onclick="window.updateAddress();" class="billmate_button"/> <a onclick="window.closefunc(this)" class="linktag"/>'.MODULE_PAYMENT_BILLMATE_NO.'</a></div> ';
 			die(json_encode(array('success' => false, 'content' => convertToUTF8($html),'popup' => true)));
 		} else {
-			if($address->firstname == "") {
-				$billmate_fname = $order->billing['firstname'];
-				$billmate_lname = $order->billing['lastname'];
+			if($address['firstname'] == "") {
+				$billmate_name = $order->billing['name'];
+
 				$company_name   = $address['company'];
 			}else {
-				$billmate_fname = $address['firstname'];
-				$billmate_lname = $address['lastname'];
+				$billmate_name = $address['firstname'].' '.$address['lastname'];
 				$company_name   = '';
 			}
 
@@ -136,10 +135,8 @@ require(DIR_WS_CLASSES . 'order.php');
                                   'entry_state' => $sendto['zone_name']
 			 */
 
-			$order->delivery['firstname'] = $billmate_fname;
-			$order->billing['firstname'] = $billmate_fname;
-			$order->delivery['lastname'] = $billmate_lname;
-			$order->billing['lastname'] = $billmate_lname;
+			$order->delivery['name'] = $billmate_name;
+			$order->billing['name'] = $billmate_name;
 			$order->delivery['company'] = $company_name;
 			$order->billing['suburb'] = $order->delivery['suburb'] = '';
 			$order->billing['company'] = $company_name;
@@ -159,7 +156,7 @@ require(DIR_WS_CLASSES . 'order.php');
 			$order->delivery['country']['title'] = $order->billing['country']['title'];
 			$order->delivery['country']['iso_code_2'] = $order->billing['country']['iso_code_2'];
 			$order->delivery['country']['iso_code_3'] = $order->billing['country']['iso_code_3'];
-			die(json_encode(array('success' => true)));
+			die(json_encode(array('success' => true,'debug' => print_r($order,true))));
 		}
 
 	} else {
