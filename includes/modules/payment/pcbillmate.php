@@ -486,7 +486,6 @@ class pcbillmate {
                 $_SESSION['WrongAddress'] = $WrongAddress;
                 zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=pcbillmate&error=invalidaddress', 'SSL'));
 	        }else{
-                if(match_usernamevp($fullname,$apiName)) {
                     if ($result->company != "") {
                         $this->pcbillmate_fname = $order->billing['firstname'];
                         $this->pcbillmate_lname = $order->billing['lastname'];
@@ -496,7 +495,7 @@ class pcbillmate {
                         $this->pcbillmate_lname = convertToUTF8($result->lastname);
                         $this->company_name = '';
                     }
-                }
+                
 
                 $this->pcbillmate_street = convertToUTF8($result->street);
                 $this->pcbillmate_postno = $result->zip;
