@@ -245,7 +245,8 @@ function partpay($order_id){
     $shippingTaxRate = zen_get_tax_rate($GLOBALS[$module]->tax_class, $order->delivery['country']['id'], $order->delivery['zone_id']);
     $shippingTaxAmount = zen_calculate_tax($_SESSION['shipping']['cost'], $shippingTaxRate);
     $shippingPrice = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['cost'])) ? $_SESSION['shipping']['cost'] : 0;
-
+    $shippingTaxAmount = (isset( $_SESSION['shipping_tax_amount'])) ?  $_SESSION['shipping_tax_amount'] : $shippingTaxAmount;
+    $shippingTaxRate = ($shippingTaxRate == 0) ? round($shippingTaxAmount/$shippingPrice,0) * 100 : $shippingTaxRate;
     $taxValue += ($shippingTaxAmount*100);
     $totalValue += ($shippingPrice*100);
     //$taxValue += $shippingPrice * ($shippingTaxRate/100);
@@ -545,7 +546,8 @@ function invoice($order_id){
     $shippingTaxRate = zen_get_tax_rate($GLOBALS[$module]->tax_class, $order->delivery['country']['id'], $order->delivery['zone_id']);
     $shippingTaxAmount = zen_calculate_tax($_SESSION['shipping']['cost'], $shippingTaxRate);
     $shippingPrice = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['cost'])) ? $_SESSION['shipping']['cost'] : 0;
-
+    $shippingTaxAmount = (isset( $_SESSION['shipping_tax_amount'])) ?  $_SESSION['shipping_tax_amount'] : $shippingTaxAmount;
+    $shippingTaxRate = ($shippingTaxRate == 0) ? round($shippingTaxAmount/$shippingPrice,0) * 100 : $shippingTaxRate;
     $taxValue += (100* $shippingTaxAmount);
     $totaltax = round($taxValue,0);
     $totalValue += (100* $shippingPrice);
