@@ -486,25 +486,27 @@ class pcbillmate {
                 $_SESSION['WrongAddress'] = $WrongAddress;
                 zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=pcbillmate&error=invalidaddress', 'SSL'));
 	        }else{
-	            if(!match_usernamevp( $fullname , $apiName)){
-                    if($result->firstname == "") {
-                        $this->pcbillmate_name = $order->billing['name'];
-						$this->pccompany_name   = $result->lastname;
-                    }else {
-                        $this->pcbillmate_name = $result->firstname.' '.$result->lastname;
-						$this->pccompany_name   = '';
+                if(match_usernamevp($fullname,$apiName)) {
+                    if ($result->company != "") {
+                        $this->pcbillmate_fname = $order->billing['firstname'];
+                        $this->pcbillmate_lname = $order->billing['lastname'];
+                        $this->company_name = convertToUTF8($result->company);
+                    } else {
+                        $this->pcbillmate_fname = convertToUTF8($result->firstname);
+                        $this->pcbillmate_lname = convertToUTF8($result->lastname);
+                        $this->company_name = '';
                     }
                 }
-                $this->pcbillmate_street = $result->street;
+
+                $this->pcbillmate_street = convertToUTF8($result->street);
                 $this->pcbillmate_postno = $result->zip;
-                $this->pcbillmate_city = $result->city;
-                $country = $db->Execute("select countries_id from " . TABLE_COUNTRIES . " where countries_iso_code_2 = '" .$result->country . "'");
-                global $customer_id;
+                $this->pcbillmate_city = convertToUTF8($result->city);
 
-
-                
-                $order->delivery['name'] = $this->pcbillmate_name;
-                $order->billing['name'] = $this->pcbillmate_name;
+                $order->delivery['firstname'] = $this->pcbillmate_fname;
+                $order->delivery['lastname'] = $this->pcbillmate_lname;
+                $order->billing['firstname'] = $this->pcbillmate_fname;
+                $order->billing['lastname'] = $this->pcbillmate_lname;
+                $order->delivery['company'] = $this->company_name;
                 $order->delivery['company'] = $this->pccompany_name;
                 $order->billing['company'] = $this->pccompany_name;
                 $order->delivery['street_address'] = $this->pcbillmate_street;
@@ -606,7 +608,7 @@ class pcbillmate {
                 'customers_telephone' => $order->customer['telephone'],
                 'customers_email_address' => $order->customer['email_address'],
                 'customers_address_format_id' => $order->customer['format_id'],
-                'delivery_name' => $order->delivery['name'],
+                'delivery_name' => $order->delivery['firstname'].' '.$order->delivery['lastname'],
                 'delivery_company' => $order->delivery['company'],
                 'delivery_street_address' => $order->delivery['street_address'],
                 'delivery_suburb' => $order->delivery['suburb'],
@@ -615,7 +617,7 @@ class pcbillmate {
                 'delivery_state' => $order->delivery['state'],
                 'delivery_country' => $order->delivery['country']['title'],
                 'delivery_address_format_id' => $order->delivery['format_id'],
-                'billing_name' => $order->billing['name'],
+                'billing_name' => $order->billing['firstname'].' '.$order->billing['lastname'],
                 'billing_company' => $order->billing['company'],
                 'billing_street_address' => $order->billing['street_address'],
                 'billing_suburb' => $order->billing['suburb'],

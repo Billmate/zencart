@@ -28,8 +28,8 @@ function partpay($order_id){
 
 
 
-    $order = new Order($order_id);
-
+    //$order = new Order($order_id);
+    $order = new Order();
     if( empty($_POST ) ) $_POST = $_GET;
     //Set the right Host and Port
 
@@ -154,9 +154,10 @@ function partpay($order_id){
     $names = explode(' ',$order->delivery['name']);
     $firstname = array_shift($names);
     $lastname = implode(' ',$names);
+    error_log('order'.print_r($order,true));
     $ship_address = array(
-        "firstname" => $firstname,
-        "lastname" 	=> $lastname,
+        "firstname" => $order->delivery['firstname'],//$firstname,
+        "lastname" 	=> $order->delivery['lastname'],//$lastname,
         "company" 	=> $order->delivery['company'],
         "street" 	=> $order->delivery['street_address'],
         "street2" 	=> "",
@@ -172,8 +173,8 @@ function partpay($order_id){
 
     $lastname = implode(' ',$names);
     $bill_address = array(
-        "firstname" => $firstname,
-        "lastname" 	=> $lastname,
+        "firstname" => $order->billing['firstname'],//$firstname,
+        "lastname" 	=> $order->billing['lastname'],//$lastname,
         "company" 	=> $order->billing['company'],
         "street" 	=> $order->billing['street_address'],
         "street2" 	=> "",
@@ -301,7 +302,7 @@ function invoice($order_id){
     $orderTemp = new Order;
 
     $order = new Order($order_id);
-
+    //$order = new Order();
    
 
     if( empty($_POST ) ) $_POST = $_GET;
@@ -447,32 +448,35 @@ function invoice($order_id){
 
     $firstname = array_shift($names);
     $lastname = implode(' ',$names);
+   error_log('order'.print_r($order,true));
     $ship_address = array(
         "firstname" => $firstname,
-        "lastname" 	=> $lastname,
-        "company" 	=> $order->delivery['company'],
-        "street" 	=> $order->delivery['street_address'],
-        "street2" 	=> "",
-        "zip" 		=> $order->delivery['postcode'],
-        "city" 		=> $order->delivery['city'],
-        "country" 	=> is_array($order->delivery['country']) ? getCountryIsoFromName($order->delivery['country']['title']) : getCountryIsoFromName($order->delivery['country']),
-        "phone" 	=> $order->customer['telephone'],
+        "lastname"  => $lastname,
+        "company"   => $order->delivery['company'],
+        "street"    => $order->delivery['street_address'],
+        "street2"   => "",
+        "zip"       => $order->delivery['postcode'],
+        "city"      => $order->delivery['city'],
+        "country"   => is_array($order->delivery['country']) ? getCountryIsoFromName($order->delivery['country']['title']) : getCountryIsoFromName($order->delivery['country']),
+        "phone"     => $order->customer['telephone'],
     );
-    $names = explode(' ',$order->billing['name']);
 
+
+    $names = explode(' ',$order->billing['name']);
     $firstname = array_shift($names);
+
     $lastname = implode(' ',$names);
     $bill_address = array(
         "firstname" => $firstname,
-        "lastname" 	=> $lastname,
-        "company" 	=> $order->billing['company'],
-        "street" 	=> $order->billing['street_address'],
-        "street2" 	=> "",
-        "zip" 		=> $order->billing['postcode'],
-        "city" 		=> $order->billing['city'],
-        "country" 	=> is_array($order->billing['country']) ? getCountryIsoFromName($order->billing['country']['title']) : getCountryIsoFromName($order->billing['country']),
-        "phone" 	=> $order->customer['telephone'],
-        "email" 	=> $order->customer['email_address'],
+        "lastname"  => $lastname,
+        "company"   => $order->billing['company'],
+        "street"    => $order->billing['street_address'],
+        "street2"   => "",
+        "zip"       => $order->billing['postcode'],
+        "city"      => $order->billing['city'],
+        "country"   => is_array($order->billing['country']) ? getCountryIsoFromName($order->billing['country']['title']) : getCountryIsoFromName($order->billing['country']),
+        "phone"     => $order->customer['telephone'],
+        "email"     => $order->customer['email_address'],
     );
     /*foreach($ship_address as $key => $col ){
          if(is_numeric($col) ) continue;

@@ -482,10 +482,12 @@ class billmate_invoice {
                 zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT, 'payment_error=billmate_invoice&error=invalidaddress', 'SSL'));
 	        }else{
 			   if($result->company != "") {
-					$this->billmate_name = $order->billing['name'];
+					$this->billmate_fname = $order->billing['firstname'];
+					$this->billmate_lname = $order->billing['lastname'];
 					$this->company_name   = convertToUTF8($result->company);
 				}else {
-					$this->billmate_name = convertToUTF8($result->firstname).' '.convertToUTF8($result->lastname);
+					$this->billmate_fname = convertToUTF8($result->firstname);
+					$this->billmate_lname = convertToUTF8($result->lastname);
 					$this->company_name   = '';
 				}
 
@@ -493,8 +495,10 @@ class billmate_invoice {
                 $this->billmate_postno = $result->zip;
                 $this->billmate_city = convertToUTF8($result->city);
 				
-                $order->delivery['name'] = $this->billmate_name;
-                $order->billing['name'] = $this->billmate_name;
+                $order->delivery['firstname'] = $this->billmate_fname;
+                $order->delivery['lastname'] = $this->billmate_lname;
+                $order->billing['firstname'] = $this->billmate_fname;
+                $order->billing['lastname'] = $this->billmate_lname;
                 $order->delivery['company'] = $this->company_name;
                 $order->billing['suburb'] = $order->delivery['suburb'] = '';
                 $order->billing['company'] = $this->company_name;
@@ -594,7 +598,7 @@ class billmate_invoice {
                 'customers_telephone' => $order->customer['telephone'],
                 'customers_email_address' => $order->customer['email_address'],
                 'customers_address_format_id' => $order->customer['format_id'],
-                'delivery_name' => $order->delivery['name'],
+                'delivery_name' => $order->delivery['firstname'].' '.$order->delivery['lastname'],
                 'delivery_company' => $order->delivery['company'],
                 'delivery_street_address' => $order->delivery['street_address'],
                 'delivery_suburb' => $order->delivery['suburb'],
@@ -603,7 +607,7 @@ class billmate_invoice {
                 'delivery_state' => $order->delivery['state'],
                 'delivery_country' => $order->delivery['country']['title'],
                 'delivery_address_format_id' => $order->delivery['format_id'],
-                'billing_name' => $order->billing['name'],
+                'billing_name' => $order->billing['firstname'].' '.$order->billing['lastname'],
                 'billing_company' => $order->billing['company'],
                 'billing_street_address' => $order->billing['street_address'],
                 'billing_suburb' => $order->billing['suburb'],
@@ -1109,7 +1113,7 @@ class billmate_invoice {
 
                 unset($_SESSION['cart_billmate_card_ID']);
                 zen_redirect(zen_href_link(FILENAME_CHECKOUT_PAYMENT,
-                    'payment_error=billmate_invoice&error_message=Please try again.',
+                    'payment_error=billmate_invoice&message=Please try again.',
                     'SSL', true, false));
 
 

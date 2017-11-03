@@ -62,7 +62,7 @@ require(DIR_WS_CLASSES . 'order.php');
 	$billing = $order->billing;
 	$delivery = $order->delivery;
 
-	$fullname = $billing['name'] .' '.$billing['company'];
+	$fullname = $billing['firstname'].' '.$billing['lastname'] .' '.$billing['company'];
 	if( empty ( $address['name'] ) ){
 		$apiName = $fullname;
 	} else {
@@ -90,7 +90,7 @@ require(DIR_WS_CLASSES . 'order.php');
 	                     !isEqual($address['country'], $billing['country']['iso_code_2'] ||
 	                     !isEqual($apiName,$fullname) );
 
-	$shippingAndBilling =  !isEqual($billing['name'],$delivery['name']) ||
+	$shippingAndBilling =  $apiMatchedName ||
 	                       !isEqual($billing['street_address'],  $delivery['street_address'] ) ||
 	                       !isEqual($billing['postcode'], $delivery['postcode']) ||
 	                       !isEqual($billing['city'], $delivery['city']) ||
@@ -104,11 +104,13 @@ require(DIR_WS_CLASSES . 'order.php');
 			die(json_encode(array('success' => false, 'content' => convertToUTF8($html),'popup' => true)));
 		} else {
 			if($address['firstname'] == "") {
-				$billmate_name = $order->billing['name'];
+				$billmate_fname = $order->billing['firstname'];
+				$billmate_lname = $order->billing['lastname'];
 
 				$company_name   = $address['company'];
 			}else {
-				$billmate_name = $address['firstname'].' '.$address['lastname'];
+				$billmate_fname = $address['firstname'];
+				$billmate_lname = $address['lastname'];
 				$company_name   = '';
 			}
 
@@ -135,8 +137,10 @@ require(DIR_WS_CLASSES . 'order.php');
                                   'entry_state' => $sendto['zone_name']
 			 */
 
-			$order->delivery['name'] = $billmate_name;
-			$order->billing['name'] = $billmate_name;
+			$order->delivery['firstname'] = $billmate_fname;
+			$order->delivery['lastname'] = $billmate_lname;
+			$order->billing['firstname'] = $billmate_fname;
+			$order->billing['lastname'] = $billmate_lname;
 			$order->delivery['company'] = $company_name;
 			$order->billing['suburb'] = $order->delivery['suburb'] = '';
 			$order->billing['company'] = $company_name;
