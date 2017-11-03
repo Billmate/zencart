@@ -687,8 +687,16 @@ class billmatebank {
 											'Shipping'=> $ship_address
 										);
 		$invoiceValues['Articles'] = $goodsList;
-		$totalValue += $shippingPrice;
-		$taxValue += $shippingPrice * ($shippingTaxRate/100);
+		$module = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['id'])) ? substr($_SESSION['shipping']['id'], 0, strpos($_SESSION['shipping']['id'], '_')) : '';
+
+
+		$shippingTaxRate = zen_get_tax_rate($GLOBALS[$module]->tax_class, $order->delivery['country']['id'], $order->delivery['zone_id']);
+		$shippingTaxAmount = zen_calculate_tax($_SESSION['shipping']['cost'], $shippingTaxRate);
+		$shippingPrice = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['cost'])) ? $_SESSION['shipping']['cost'] : 0;
+
+		$taxValue += (100* $shippingTaxAmount);
+		//$totaltax = round($taxValue,0);
+		$totalValue += (100* $shippingPrice);
 		$totaltax = round($taxValue,0);
 		$totalwithtax = round(str_replace(',','.',$order->info['total'])*100,0);
 
@@ -702,7 +710,7 @@ class billmatebank {
 										"taxrate" => 0
 									),
 									"Shipping" => array(
-										"withouttax" => ($shippingPrice)?round($shippingPrice,0):0,
+										"withouttax" => ($shippingPrice)?round($shippingPrice*100,0):0,
 										"taxrate" => ($shippingTaxRate)?$shippingTaxRate:0
 									),
 									"Total" => array(
