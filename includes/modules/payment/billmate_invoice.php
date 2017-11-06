@@ -717,7 +717,7 @@ class billmate_invoice {
     }
 
     function process_button() {
-        global $order, $order_total_modules, $billmate_ot, $shipping,$cart_billmate_card_ID,$sendto,$billto,$db;
+        global $order, $order_total_modules, $billmate_ot, $shipping,$cart_billmate_card_ID,$sendto,$billto,$db,$order_totals;
         $languages_id = $_SESSION['languages_id'];
         $counter = 1;
         $process_button_string = '';
@@ -733,7 +733,7 @@ class billmate_invoice {
 		zen_draw_hidden_field('billmate_city'.$counter, convertToUTF8($order->billing['city'])).
 		zen_draw_hidden_field('billmate_country'.$counter,  convertToUTF8($this->addrs->country));
 
-        $order_totals = $_SESSION['order_total_modules']->modules;
+        //$order_totals = $_SESSION['order_total_modules']->modules;
         $languages = $db->Execute("select code from " . TABLE_LANGUAGES . " where languages_id = '{$languages_id}'");
 
         $languageCode = strtoupper( $languages->fields['code'] );
@@ -745,8 +745,8 @@ class billmate_invoice {
             $j = 0;
             $table = preg_split("/[,]/", MODULE_PAYMENT_BILLMATE_ORDER_TOTAL_IGNORE);
 
-            while (list(, $value) = each($order_totals)) {
-                $class = substr($value, 0, strrpos($value, '.'));
+            foreach ($order_totals as $ot_code => $value) {
+                $class = $ot_code;
 
                 if (!$GLOBALS[$class]->enabled) {
                     continue;

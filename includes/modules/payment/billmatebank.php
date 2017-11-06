@@ -386,7 +386,7 @@ class billmatebank {
     }
 
     function process_button() {
-        global $order, $cart,$order_total_modules, $billmatebank_ot, $shipping,  $language_id, $language, $currency,$cart_billmate_bank_ID,$db;
+        global $order, $cart,$order_total_modules, $billmatebank_ot, $shipping,  $language_id, $language, $currency,$cart_billmate_bank_ID,$db, $order_totals;
 	    $languages_id = $_SESSION['languages_id'];
         $counter = 1;
         $process_button_string= '';
@@ -404,15 +404,15 @@ class billmatebank {
 		unset($_SESSION['billmatebank_called_api']);
 		unset($_SESSION['billmatebank_api_result']);
         
-        $order_totals = $order_total_modules->modules;
+        //$order_totals = $order_total_modules->modules;
 
         if (is_array($order_totals)) {
             reset($order_totals);
             $j = 0;
             $table = preg_split("/[,]/", MODULE_PAYMENT_BILLMATEBANK_ORDER_TOTAL_IGNORE);
 
-            while (list(, $value) = each($order_totals)) {
-                $class = substr($value, 0, strrpos($value, '.'));
+	        foreach ($order_totals as $ot_code => $value) {
+		        $class = $ot_code;
 
                 if (!$GLOBALS[$class]->enabled) {
                     continue;
@@ -690,7 +690,7 @@ class billmatebank {
 		$module = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['id'])) ? substr($_SESSION['shipping']['id'], 0, strpos($_SESSION['shipping']['id'], '_')) : '';
 
 
-		$shippingTaxRate = zen_get_tax_rate($GLOBALS[$module]->tax_class, $order->delivery['country']['id'], $order->delivery['zone_id']);
+		$shippingTaxRate = zen_get_tax_rate($GLOBALS[$module]->tax_class,getCountryIdFromName($order->delivery['country']), $order->delivery['zone_id']);
 		$shippingTaxAmount = zen_calculate_tax($_SESSION['shipping']['cost'], $shippingTaxRate);
 		$shippingPrice = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['cost'])) ? $_SESSION['shipping']['cost'] : 0;
 
@@ -1095,5 +1095,11 @@ class billmatebank {
                 'MODULE_PAYMENT_BILLMATEBANK_SORT_ORDER');
     }
 
+}
+function getCountryIdFromName($name){
+	global $db;
+	$country = $db->Execute("select * from " . TABLE_COUNTRIES . " where countries_name = '" . $name . "'");
+
+	return $country->fields['countries_id'];
 }
 

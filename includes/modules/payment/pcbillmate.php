@@ -725,7 +725,7 @@ class pcbillmate {
     }
 
     function process_button() {
-        global $order, $order_total_modules, $pcbillmate_ot, $shipping,$pclass,$cart_billmate_card_ID,$db;
+        global $order, $order_total_modules, $pcbillmate_ot, $shipping,$pclass,$cart_billmate_card_ID,$db,$order_totals;
         $counter = 1;
         $process_button_string = '';
         $checked = true;
@@ -745,15 +745,15 @@ class pcbillmate {
         $pclass = $this->pcbillmate_pclass;
         $_SESSION['pclass'] = $pclass;
 
-        $order_totals = $_SESSION['order_total_modules']->modules;
+        //$order_totals = $_SESSION['order_total_modules']->modules;
 
         if (is_array($order_totals)) {
             reset($order_totals);
             $j = 0;
             $table = preg_split("/[,]/", MODULE_PAYMENT_PCBILLMATE_ORDER_TOTAL_IGNORE);
 
-            while (list(, $value) = each($order_totals)) {
-                $class = substr($value, 0, strrpos($value, '.'));
+            foreach ($order_totals as $ot_code => $value) {
+                $class = $ot_code;
 
                 if (!$GLOBALS[$class]->enabled) {
                     continue;

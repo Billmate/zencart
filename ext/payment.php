@@ -242,7 +242,7 @@ function partpay($order_id){
     $module = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['id'])) ? substr($_SESSION['shipping']['id'], 0, strpos($_SESSION['shipping']['id'], '_')) : '';
 
 
-    $shippingTaxRate = zen_get_tax_rate($GLOBALS[$module]->tax_class, $order->delivery['country']['id'], $order->delivery['zone_id']);
+    $shippingTaxRate = zen_get_tax_rate($GLOBALS[$module]->tax_class, getCountryIdFromName($order->delivery['country']), $order->delivery['zone_id']);
     $shippingTaxAmount = zen_calculate_tax($_SESSION['shipping']['cost'], $shippingTaxRate);
     $shippingPrice = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['cost'])) ? $_SESSION['shipping']['cost'] : 0;
     $shippingTaxAmount = (isset( $_SESSION['shipping_tax_amount'])) ?  $_SESSION['shipping_tax_amount'] : $shippingTaxAmount;
@@ -543,7 +543,7 @@ function invoice($order_id){
     $module = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['id'])) ? substr($_SESSION['shipping']['id'], 0, strpos($_SESSION['shipping']['id'], '_')) : '';
 
 
-    $shippingTaxRate = zen_get_tax_rate($GLOBALS[$module]->tax_class, $order->delivery['country']['id'], $order->delivery['zone_id']);
+    $shippingTaxRate = zen_get_tax_rate($GLOBALS[$module]->tax_class, getCountryIdFromName($order->delivery['country']), $order->delivery['zone_id']);
     $shippingTaxAmount = zen_calculate_tax($_SESSION['shipping']['cost'], $shippingTaxRate);
     $shippingPrice = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['cost'])) ? $_SESSION['shipping']['cost'] : 0;
     $shippingTaxAmount = (isset( $_SESSION['shipping_tax_amount'])) ?  $_SESSION['shipping_tax_amount'] : $shippingTaxAmount;
@@ -679,6 +679,13 @@ function getCountryIsoFromName($name){
     $country = $db->Execute("select * from " . TABLE_COUNTRIES . " where countries_name = '" . $name . "'");
 
     return $country->fields['countries_iso_code_2'];
+}
+
+function getCountryIdFromName($name){
+    global $db;
+    $country = $db->Execute("select * from " . TABLE_COUNTRIES . " where countries_name = '" . $name . "'");
+
+    return $country->fields['countries_id'];
 }
 
 function getTotal($id){
