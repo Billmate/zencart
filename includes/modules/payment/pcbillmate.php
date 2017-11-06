@@ -753,7 +753,7 @@ class pcbillmate {
             $table = preg_split("/[,]/", MODULE_PAYMENT_PCBILLMATE_ORDER_TOTAL_IGNORE);
 
             foreach ($order_totals as $ot_code => $value) {
-                $class = $ot_code;
+                $class = $value['code'];
 
                 if (!$GLOBALS[$class]->enabled) {
                     continue;

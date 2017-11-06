@@ -412,7 +412,7 @@ class billmatebank {
             $table = preg_split("/[,]/", MODULE_PAYMENT_BILLMATEBANK_ORDER_TOTAL_IGNORE);
 
 	        foreach ($order_totals as $ot_code => $value) {
-		        $class = $ot_code;
+		        $class = $value['code'];
 
                 if (!$GLOBALS[$class]->enabled) {
                     continue;
@@ -1096,10 +1096,5 @@ class billmatebank {
     }
 
 }
-function getCountryIdFromName($name){
-	global $db;
-	$country = $db->Execute("select * from " . TABLE_COUNTRIES . " where countries_name = '" . $name . "'");
 
-	return $country->fields['countries_id'];
-}
 

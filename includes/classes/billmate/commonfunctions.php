@@ -32,3 +32,11 @@ if(!function_exists('getCountryID')){
 		}
 	}
 }
+if(!function_exists('getCountryIdFromName')){
+	function getCountryIdFromName($name){
+		global $db;
+		$country = $db->Execute("select * from " . TABLE_COUNTRIES . " where countries_name = '" . $name . "'");
+
+		return $country->fields['countries_id'];
+	}
+}

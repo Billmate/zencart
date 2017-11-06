@@ -746,8 +746,8 @@ class billmate_invoice {
             $table = preg_split("/[,]/", MODULE_PAYMENT_BILLMATE_ORDER_TOTAL_IGNORE);
 
             foreach ($order_totals as $ot_code => $value) {
-                $class = $ot_code;
-
+                $class = $value['code'];
+                error_log('class'.$class);
                 if (!$GLOBALS[$class]->enabled) {
                     continue;
                 }
