@@ -430,8 +430,9 @@ class billmatecardpay {
 
     function process_button() {
         global $order, $order_total_modules, $billmatecardpay_ot, $shipping, $languages_id, $language_id, $language, $currency,$cart_billmate_card_ID,$db,$order_totals;
+	    $shipping = $_SESSION['shipping'];
 
-        $counter = 1;
+	    $counter = 1;
         $process_button_string= '';
 		
         $eid = MODULE_PAYMENT_BILLMATECARDPAY_EID;
@@ -457,9 +458,7 @@ class billmatecardpay {
 	        foreach ($order_totals as $ot_code => $value) {
 		        $class = $value['code'];
 
-                if (!$GLOBALS[$class]->enabled) {
-                    continue;
-                }
+
                 $code = $GLOBALS[$class]->code;
                 $ignore=false;
 
@@ -635,7 +634,14 @@ class billmatecardpay {
 
                 $codes[] = $code;
 				if( $code == 'ot_discount' ) { $price_without_tax = 0 - $price_without_tax; }
-				if( $code == 'ot_shipping' ){ $shippingPrice = $price_without_tax; $shippingTaxRate = $tax; continue; }
+				if( $code == 'ot_shipping' ){
+					$shippingPrice = $price_without_tax;
+					$shippingTaxRate = $tax;
+					$totalValue += round($shippingPrice);
+					$taxValue += round(($shippingPrice * ($shippingTaxRate/100)));
+					continue;
+
+				}
 
                 if ($value != "" && $value != 0) {
 	                $totals = $totalValue;
@@ -734,18 +740,8 @@ class billmatecardpay {
 										);
 		$invoiceValues['Articles'] = $goodsList;
 
-		$module = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['id'])) ? substr($_SESSION['shipping']['id'], 0, strpos($_SESSION['shipping']['id'], '_')) : '';
 
-
-		$shippingTaxRate = zen_get_tax_rate($GLOBALS[$module]->tax_class, getCountryIdFromName($order->delivery['country']), $order->delivery['zone_id']);
-		$shippingTaxAmount = zen_calculate_tax($_SESSION['shipping']['cost'], $shippingTaxRate);
-		$shippingPrice = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['cost'])) ? $_SESSION['shipping']['cost'] : 0;
-
-		$shippingTaxAmount = (isset( $_SESSION['shipping_tax_amount'])) ?  $_SESSION['shipping_tax_amount'] : $shippingTaxAmount;
-		$shippingTaxRate = ($shippingTaxRate == 0) ? round($shippingTaxAmount/$shippingPrice,0) * 100 : $shippingTaxRate;
-		$taxValue += (100* $shippingTaxAmount);
 		$totaltax = round($taxValue,0);
-		$totalValue += (100* $shippingPrice);
 
 		
 		$totalwithtax = round(str_replace(',','.',$order->info['total'])*100,0);
@@ -759,7 +755,7 @@ class billmatecardpay {
 										"taxrate" => 0
 									),
 									"Shipping" => array(
-										"withouttax" => ($shippingPrice)?round($shippingPrice*100,0):0,
+										"withouttax" => ($shippingPrice)?round($shippingPrice,0):0,
 										"taxrate" => ($shippingTaxRate)?$shippingTaxRate:0
 									),
 									"Total" => array(

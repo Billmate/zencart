@@ -28,8 +28,8 @@ function partpay($order_id){
 
 
 
-    //$order = new Order($order_id);
-    $order = new Order();
+    $order = new Order($order_id);
+    //$order = new Order();
     if( empty($_POST ) ) $_POST = $_GET;
     //Set the right Host and Port
 
@@ -128,7 +128,12 @@ function partpay($order_id){
 
             $codes[] = $code;
             if( $code == 'ot_discount' ) { $price_without_tax = 0 - $price_without_tax; }
-            if( $code == 'ot_shipping' ){ $shippingPrice = $price_without_tax; $shippingTaxRate = $tax; continue; }
+            if( $code == 'ot_shipping' ){
+                $shippingPrice = $price_without_tax;
+                $shippingTaxRate = $tax;
+                $totalValue += round($shippingPrice);
+                $taxValue += round(($shippingPrice * ($shippingTaxRate/100)));
+                continue; }
 
             if ($value != "" && $value != 0) {
                 $totals = $totalValue;
@@ -152,19 +157,20 @@ function partpay($order_id){
     $ship_address = $bill_address = array();
     $countryData = BillmateCountry::getSwedenData();
     $names = explode(' ',$order->delivery['name']);
+
+
     $firstname = array_shift($names);
     $lastname = implode(' ',$names);
-    error_log('order'.print_r($order,true));
     $ship_address = array(
-        "firstname" => $order->delivery['firstname'],//$firstname,
-        "lastname" 	=> $order->delivery['lastname'],//$lastname,
-        "company" 	=> $order->delivery['company'],
-        "street" 	=> $order->delivery['street_address'],
-        "street2" 	=> "",
-        "zip" 		=> $order->delivery['postcode'],
-        "city" 		=> $order->delivery['city'],
-        "country" 	=> is_array($order->delivery['country']) ? getCountryIsoFromName($order->delivery['country']['title']) : getCountryIsoFromName($order->delivery['country']),
-        "phone" 	=> $order->customer['telephone'],
+        "firstname" => $firstname,
+        "lastname"  => $lastname,
+        "company"   => $order->delivery['company'],
+        "street"    => $order->delivery['street_address'],
+        "street2"   => "",
+        "zip"       => $order->delivery['postcode'],
+        "city"      => $order->delivery['city'],
+        "country"   => is_array($order->delivery['country']) ? getCountryIsoFromName($order->delivery['country']['title']) : getCountryIsoFromName($order->delivery['country']),
+        "phone"     => $order->customer['telephone'],
     );
 
 
@@ -173,16 +179,16 @@ function partpay($order_id){
 
     $lastname = implode(' ',$names);
     $bill_address = array(
-        "firstname" => $order->billing['firstname'],//$firstname,
-        "lastname" 	=> $order->billing['lastname'],//$lastname,
-        "company" 	=> $order->billing['company'],
-        "street" 	=> $order->billing['street_address'],
-        "street2" 	=> "",
-        "zip" 		=> $order->billing['postcode'],
-        "city" 		=> $order->billing['city'],
-        "country" 	=> is_array($order->billing['country']) ? getCountryIsoFromName($order->billing['country']['title']) : getCountryIsoFromName($order->billing['country']),
-        "phone" 	=> $order->customer['telephone'],
-        "email" 	=> $order->customer['email_address'],
+        "firstname" => $firstname,
+        "lastname"  => $lastname,
+        "company"   => $order->billing['company'],
+        "street"    => $order->billing['street_address'],
+        "street2"   => "",
+        "zip"       => $order->billing['postcode'],
+        "city"      => $order->billing['city'],
+        "country"   => is_array($order->billing['country']) ? getCountryIsoFromName($order->billing['country']['title']) : getCountryIsoFromName($order->billing['country']),
+        "phone"     => $order->customer['telephone'],
+        "email"     => $order->customer['email_address'],
     );
 
     /*foreach($ship_address as $key => $col ){
@@ -239,17 +245,9 @@ function partpay($order_id){
         'Shipping'=> $ship_address
     );
     $invoiceValues['Articles'] = $goodsList;
-    $module = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['id'])) ? substr($_SESSION['shipping']['id'], 0, strpos($_SESSION['shipping']['id'], '_')) : '';
 
 
-    $shippingTaxRate = zen_get_tax_rate($GLOBALS[$module]->tax_class, getCountryIdFromName($order->delivery['country']), $order->delivery['zone_id']);
-    $shippingTaxAmount = zen_calculate_tax($_SESSION['shipping']['cost'], $shippingTaxRate);
-    $shippingPrice = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['cost'])) ? $_SESSION['shipping']['cost'] : 0;
-    $shippingTaxAmount = (isset( $_SESSION['shipping_tax_amount'])) ?  $_SESSION['shipping_tax_amount'] : $shippingTaxAmount;
-    $shippingTaxRate = ($shippingTaxRate == 0) ? round($shippingTaxAmount/$shippingPrice,0) * 100 : $shippingTaxRate;
-    $taxValue += ($shippingTaxAmount*100);
-    $totalValue += ($shippingPrice*100);
-    //$taxValue += $shippingPrice * ($shippingTaxRate/100);
+
     $totaltax = round($taxValue,0);
     $totalwithtax = round(getTotal($order_id)*100,0);
     //$totalwithtax += $shippingPrice * ($shippingTaxRate/100);
@@ -262,7 +260,7 @@ function partpay($order_id){
             "taxrate" => 0
         ),
         "Shipping" => array(
-            "withouttax" => ($shippingPrice)?round($shippingPrice*100,0):0,
+            "withouttax" => ($shippingPrice)?round($shippingPrice,0):0,
             "taxrate" => ($shippingTaxRate)?$shippingTaxRate:0
         ),
         "Total" => array(
@@ -415,9 +413,10 @@ function invoice($order_id){
             if( $code == 'ot_discount' ) { $price_without_tax = 0 - $price_without_tax; }
             if( $code == 'ot_shipping' ){
                 $shippingPrice = $price_without_tax;
+
                 $shippingTaxRate = $tax;
-                $totalValue += $shippingPrice;
-                $taxValue += $shippingPrice * ($shippingTaxRate/100);
+                $totalValue += round($shippingPrice);
+                $taxValue += round(($shippingPrice * ($shippingTaxRate/100)));
 
                 continue;
             }
@@ -457,7 +456,6 @@ function invoice($order_id){
 
     $firstname = array_shift($names);
     $lastname = implode(' ',$names);
-   error_log('order'.print_r($order,true));
     $ship_address = array(
         "firstname" => $firstname,
         "lastname"  => $lastname,
@@ -543,14 +541,9 @@ function invoice($order_id){
     $module = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['id'])) ? substr($_SESSION['shipping']['id'], 0, strpos($_SESSION['shipping']['id'], '_')) : '';
 
 
-    $shippingTaxRate = zen_get_tax_rate($GLOBALS[$module]->tax_class, getCountryIdFromName($order->delivery['country']), $order->delivery['zone_id']);
-    $shippingTaxAmount = zen_calculate_tax($_SESSION['shipping']['cost'], $shippingTaxRate);
-    $shippingPrice = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['cost'])) ? $_SESSION['shipping']['cost'] : 0;
-    $shippingTaxAmount = (isset( $_SESSION['shipping_tax_amount'])) ?  $_SESSION['shipping_tax_amount'] : $shippingTaxAmount;
-    $shippingTaxRate = ($shippingTaxRate == 0) ? round($shippingTaxAmount/$shippingPrice,0) * 100 : $shippingTaxRate;
-    $taxValue += (100* $shippingTaxAmount);
+
     $totaltax = round($taxValue,0);
-    $totalValue += (100* $shippingPrice);
+    //$totalValue += (100* $shippingPrice);
     $totalwithtax = round(getTotal($order_id)*100,0);
     //$totalwithtax += $shippingPrice * ($shippingTaxRate/100);
     $totalwithouttax = $totalValue;
@@ -562,11 +555,11 @@ function invoice($order_id){
             "taxrate" => ($handlingTaxRate)?$handlingTaxRate:0
         ),
         "Shipping" => array(
-            "withouttax" => ($shippingPrice)?round($shippingPrice*100,0):0,
+            "withouttax" => ($shippingPrice)?round($shippingPrice,0):0,
             "taxrate" => ($shippingTaxRate)?$shippingTaxRate:0
         ),
         "Total" => array(
-            "withouttax" => $totalwithouttax,
+            "withouttax" => round($totalwithouttax),
             "tax" => $totaltax,
             "rounding" => $rounding,
             "withtax" => $totalwithtax,
@@ -593,7 +586,6 @@ function invoice($order_id){
 
 switch($_GET['method']){
     case 'invoice':
-        error_log(print_r($_GET,true));
         invoice($_GET['order_id']);
         break;
     case 'partpay':

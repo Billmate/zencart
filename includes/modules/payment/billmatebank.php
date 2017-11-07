@@ -388,7 +388,9 @@ class billmatebank {
     function process_button() {
         global $order, $cart,$order_total_modules, $billmatebank_ot, $shipping,  $language_id, $language, $currency,$cart_billmate_bank_ID,$db, $order_totals;
 	    $languages_id = $_SESSION['languages_id'];
-        $counter = 1;
+	    $shipping = $_SESSION['shipping'];
+
+	    $counter = 1;
         $process_button_string= '';
     
         $eid = MODULE_PAYMENT_BILLMATEBANK_EID;
@@ -414,9 +416,7 @@ class billmatebank {
 	        foreach ($order_totals as $ot_code => $value) {
 		        $class = $value['code'];
 
-                if (!$GLOBALS[$class]->enabled) {
-                    continue;
-                }
+
                 $code = $GLOBALS[$class]->code;
                 $ignore=false;
 
@@ -593,7 +593,13 @@ class billmatebank {
 					$price_without_tax = $price_without_tax/(($tax+100)/100);
                 }
 				if( $code == 'ot_discount' ) { $price_without_tax = 0 - $price_without_tax; }
-				if( $code == 'ot_shipping' ){ $shippingPrice = $price_without_tax; $shippingTaxRate = $tax; continue; }
+				if( $code == 'ot_shipping' ){
+					$shippingPrice = $price_without_tax;
+					$shippingTaxRate = $tax;
+					$totalValue += round($shippingPrice);
+					$taxValue += round(($shippingPrice * ($shippingTaxRate/100)));
+					continue;
+				}
                 if ($value != "" && $value != 0) {
 	                $totals = $totalValue;
 	                foreach($prepareDiscounts as $tax => $value)
@@ -687,23 +693,10 @@ class billmatebank {
 											'Shipping'=> $ship_address
 										);
 		$invoiceValues['Articles'] = $goodsList;
-		$module = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['id'])) ? substr($_SESSION['shipping']['id'], 0, strpos($_SESSION['shipping']['id'], '_')) : '';
 
-
-		$shippingTaxRate = zen_get_tax_rate($GLOBALS[$module]->tax_class,getCountryIdFromName($order->delivery['country']), $order->delivery['zone_id']);
-		$shippingTaxAmount = zen_calculate_tax($_SESSION['shipping']['cost'], $shippingTaxRate);
-		$shippingPrice = (isset($_SESSION['shipping']) && isset($_SESSION['shipping']['cost'])) ? $_SESSION['shipping']['cost'] : 0;
-
-		$shippingTaxAmount = (isset( $_SESSION['shipping_tax_amount'])) ?  $_SESSION['shipping_tax_amount'] : $shippingTaxAmount;
-		$shippingTaxRate = ($shippingTaxRate == 0) ? round($shippingTaxAmount/$shippingPrice,0) * 100 : $shippingTaxRate;
-		
-		$taxValue += (100* $shippingTaxAmount);
-		//$totaltax = round($taxValue,0);
-		$totalValue += (100* $shippingPrice);
 		$totaltax = round($taxValue,0);
 		$totalwithtax = round(str_replace(',','.',$order->info['total'])*100,0);
 
-		//$totalwithtax += $shippingPrice * ($shippingTaxRate/100);
 		$totalwithouttax = $totalValue;
 		$rounding = $totalwithtax - ($totalwithouttax+$totaltax);
 		
@@ -713,7 +706,7 @@ class billmatebank {
 										"taxrate" => 0
 									),
 									"Shipping" => array(
-										"withouttax" => ($shippingPrice)?round($shippingPrice*100,0):0,
+										"withouttax" => ($shippingPrice)?round($shippingPrice,0):0,
 										"taxrate" => ($shippingTaxRate)?$shippingTaxRate:0
 									),
 									"Total" => array(

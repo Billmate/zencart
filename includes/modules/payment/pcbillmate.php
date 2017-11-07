@@ -261,9 +261,7 @@ class pcbillmate {
             $langCode = 'en';
         $langCode = $languageCode->fields['code'] == 'se' ? 'sv' : $languageCode->fields['code'];
 
-        error_log('lang'.$langCode);
-        error_log('total'.$total);
-        error_log('table'.MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE);
+        
         $pclasses = BillmateUtils::calc_monthly_cost($total, MODULE_PAYMENT_PCBILLMATE_PCLASS_TABLE, strtolower($order->billing['country']['iso_code_2']), 0,$langCode,MODULE_PAYMENT_PCBILLMATE_MONTH);
         
         $lowest = BillmateUtils::get_cheapest_pclass($pclasses,$total);
@@ -726,6 +724,8 @@ class pcbillmate {
 
     function process_button() {
         global $order, $order_total_modules, $pcbillmate_ot, $shipping,$pclass,$cart_billmate_card_ID,$db,$order_totals;
+        $shipping = $_SESSION['shipping'];
+
         $counter = 1;
         $process_button_string = '';
         $checked = true;
@@ -755,9 +755,7 @@ class pcbillmate {
             foreach ($order_totals as $ot_code => $value) {
                 $class = $value['code'];
 
-                if (!$GLOBALS[$class]->enabled) {
-                    continue;
-                }
+                
                 $code = $GLOBALS[$class]->code;
                 $ignore=false;
 

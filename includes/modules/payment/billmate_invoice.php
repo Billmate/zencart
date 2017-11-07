@@ -719,6 +719,7 @@ class billmate_invoice {
     function process_button() {
         global $order, $order_total_modules, $billmate_ot, $shipping,$cart_billmate_card_ID,$sendto,$billto,$db,$order_totals;
         $languages_id = $_SESSION['languages_id'];
+        $shipping = $_SESSION['shipping'];
         $counter = 1;
         $process_button_string = '';
         $checked = true;
@@ -747,10 +748,9 @@ class billmate_invoice {
 
             foreach ($order_totals as $ot_code => $value) {
                 $class = $value['code'];
-                error_log('class'.$class);
-                if (!$GLOBALS[$class]->enabled) {
-                    continue;
-                }
+                
+
+
                 $code = $GLOBALS[$class]->code;
                 $ignore=false;
 
@@ -769,6 +769,7 @@ class billmate_invoice {
                         $billmate_ot['title_'.$j.'_'.$i] = html_entity_decode($GLOBALS[$class]->output[$i]['title']);
 
                         $billmate_ot['text_'.$j.'_'.$i] = $GLOBALS[$class]->output[$i]['text'];
+
                         if (is_numeric($GLOBALS[$class]->deduction) &&
                                 $GLOBALS[$class]->deduction > 0) {
                             $billmate_ot['value_'.$j.'_'.$i] = -$GLOBALS[$class]->deduction;
@@ -1099,14 +1100,12 @@ class billmate_invoice {
             $debug = false;
             $ssl = true;
             $k = new BillMate($eid, $secret, $ssl, $this->billmate_testmode, $debug);
-            error_log('request' . print_r($_REQUEST, true));
 
             foreach ($_REQUEST as $key => $value) {
                 $_REQUEST[$key] = stripslashes($value);
             }
 
             $_DATA = $k->verify_hash($_REQUEST);
-            error_log('data' . print_r($_DATA, true));
             if (!isset($_DATA['status']) || ($_DATA['status'] == 'Cancelled' || $_DATA['status'] == 'Failed')) {
                 billmate_remove_order($_DATA['orderid'], true);
 
@@ -1133,20 +1132,15 @@ class billmate_invoice {
                 $already_completed = false;
 
             }
-            error_log('completed' . var_export($already_completed, true));
             $_SESSION['already_completed'] = $already_completed;
             $products_ordered = '';
             $subtotal = 0;
             $total_tax = 0;
-            error_log('order-products' . sizeof($order->products));
             for ($i = 0, $n = sizeof($order->products); $i < $n; $i++) {
-                error_log('roundProductStart'.$i);
 // Stock Update - Joao Correia
                 if (STOCK_LIMITED == 'true') {
-                    error_log('stock_limited');
                     $stock_values = null;
                     if (DOWNLOAD_ENABLED == 'true') {
-                        error_log('download');
                         $stock_query_raw = "SELECT products_quantity, pad.products_attributes_filename
                                 FROM " . TABLE_PRODUCTS . " p
                                 LEFT JOIN " . TABLE_PRODUCTS_ATTRIBUTES . " pa
@@ -1165,7 +1159,6 @@ class billmate_invoice {
                         $stock_values = $db->Execute("select products_quantity from " . TABLE_PRODUCTS . " where products_id = '" . zen_get_prid($order->products[$i]['id']) . "'");
                     }
                     if ($stock_values->RecordCount() > 0) {
-                        error_log('stock_values count > 0');
                         while (!$stock_values->EOF) {
 // do not decrement quantities if products_attributes_filename exists
                             if ((DOWNLOAD_ENABLED != 'true') || (!$stock_values->fields['products_attributes_filename'])) {
@@ -1190,7 +1183,6 @@ class billmate_invoice {
                 $attributes_exist = '0';
                 $products_ordered_attributes = '';
                 if (isset($order->products[$i]['attributes'])) {
-                    error_log('attributes');
                     $attributes_exist = '1';
                     for ($j = 0, $n2 = sizeof($order->products[$i]['attributes']); $j < $n2; $j++) {
                         $attribute_values = null;
@@ -1219,10 +1211,8 @@ class billmate_invoice {
 
                 $products_ordered .= $order->products[$i]['qty'] . ' x ' . $order->products[$i]['name'] . ' (' . $order->products[$i]['model'] . ') = ' . $currencies->display_price($order->products[$i]['final_price'],
                         $order->products[$i]['tax'], $order->products[$i]['qty']) . $products_ordered_attributes . "\n";
-                error_log('roundProductEnd'.$i);
 
             }
-            error_log('after_products');
             $email_order = STORE_NAME . "\n" .
                 EMAIL_SEPARATOR . "\n" .
                 EMAIL_TEXT_ORDER_NUMBER . ' ' . $order_id . "\n" .
@@ -1257,7 +1247,6 @@ class billmate_invoice {
                     $email_order .= $payment_class->email_footer . "\n\n";
                 }
             }
-            error_log('completed' . var_export($_SESSION['already_completed'], true));
             if (!$_SESSION['already_completed']) {
                 $languageCode = $db->Execute("select code from languages where languages_id = " . $languages_id);
                 $langCode = (strtolower($languageCode->fields['code']) == 'se') ? 'sv' : $languageCode->fields['code'];
