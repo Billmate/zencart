@@ -307,7 +307,7 @@ class pcbillmate {
                         'field' => zen_draw_pull_down_menu('pcbillmate_pclass', $pclasses, $default)),
                 array('title' => MODULE_PAYMENT_PCBILLMATE_PERSON_NUMBER,
                         'field' => zen_draw_input_field('pcbillmate_pnum',
-                        $pcbillmate_pnum)),
+                        $pcbillmate_pnum,'autocomplete="off"')),
                 array('title' => "<link rel='stylesheet' href='".HTTP_SERVER."/billmatestyle.css'/>",
                         'field' => zen_draw_hidden_field('pcbillmate_phone',
                         $pcbillmate_phone)),
@@ -630,7 +630,7 @@ class pcbillmate {
                 'cc_number' => $order->info['cc_number'],
                 'cc_expires' => $order->info['cc_expires'],
                 'date_purchased' => 'now()',
-                'orders_status' => 0,
+                'orders_status' => 1,
                 'currency' => $order->info['currency'],
                 'currency_value' => $order->info['currency_value']);
 
@@ -651,7 +651,7 @@ class pcbillmate {
 
             $customer_notification = (SEND_EMAILS == 'true') ? '1' : '0';
             $sql_data_array = array('orders_id' => $insert_id,
-                'orders_status_id' => 0,
+                'orders_status_id' => 1,
                 'date_added' => 'now()',
                 'customer_notified' => 0,
                 'comments' => $order->info['comments']);

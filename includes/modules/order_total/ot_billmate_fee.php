@@ -69,7 +69,8 @@ class ot_billmate_fee {
 
     function calculate_credit($amount) {
         global $order, $customer_id, $payment, $sendto, $customer_id,
-        $customer_zone_id, $customer_country_id, $cart, $currencies, $currency;
+        $customer_zone_id, $customer_country_id, $cart, $currencies;
+        $currency = $_SESSION['currency'];
 
         $od_amount=0;
 	
@@ -105,8 +106,9 @@ class ot_billmate_fee {
 
     function get_order_total() {
 		
-        global  $order, $cart, $currencies, $currency, $db;
+        global  $order, $cart, $currencies, $db;
         $order_total = $order->info['total'];
+        $currency = $_SESSION['currency'];
 
 // Check if gift voucher is in cart and adjust total
         $products = $order->products;

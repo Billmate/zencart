@@ -312,7 +312,7 @@ class billmate_invoice {
                         'field' => $popup),				
                 array('title' => MODULE_PAYMENT_BILLMATE_PERSON_NUMBER,
                         'field' => zen_draw_input_field('billmate_pnum',
-                        $billmate_pnum)),
+                        $billmate_pnum,'autocomplete="off"')),
                 array('title' =>zen_draw_checkbox_field('billmate_email',
                     $order->customer['email_address'],true).sprintf(MODULE_PAYMENT_BILLMATE_EMAIL , $order->customer['email_address']),
                         'field' =>  '')
@@ -554,26 +554,41 @@ class billmate_invoice {
 
         if ($insert_order == true) {
             $order_totals = array();
+            
             if (is_array($order_total_modules->modules)) {
                 reset($order_total_modules->modules);
+                error_log('otModules'.print_r($order_total_modules,true));
                 while (list(, $value) = each($order_total_modules->modules)) {
                     $class = substr($value, 0, strrpos($value, '.'));
                     if( $class == 'ot_shipping' ) {
                         $shipping_title = $order->info['shipping_method'] . ':';
                         $shipping_text = $currencies->format($order->info['shipping_cost'], true, $order->info['currency'], $order->info['currency_value']);
                         $shipping_value = $order->info['shipping_cost'];
-                        $order_totals[] = array('code' => $GLOBALS[$class]->code,
+                        $order_totals[$GLOBALS[$class]->code] = array('code' => $GLOBALS[$class]->code,
                             'title' => $shipping_title,
                             'text' => $shipping_text,
                             'value' => $shipping_value,
                             'sort_order' => $GLOBALS[$class]->sort_order);
-                    } else {
+                    } elseif($class == 'ot_billmate_fee') {
+                        //$GLOBALS[$class]->process();
+                        for ($i=0, $n=sizeof($GLOBALS[$class]->output); $i<$n; $i++) {
+
+
+                            if (zen_not_null($GLOBALS[$class]->output[$i]['title']) && zen_not_null($GLOBALS[$class]->output[$i]['text'])) {
+                                $order_totals[$GLOBALS[$class]->code] = array('code' => $GLOBALS[$class]->code,
+                                    'title' => $GLOBALS[$class]->output[$i]['title'],
+                                    'text' => $GLOBALS[$class]->output[$i]['text'],
+                                    'value' => $GLOBALS[$class]->output[$i]['value'],
+                                    'sort_order' => $GLOBALS[$class]->sort_order);
+                            }
+                        }
+                    } /*else {
                         $GLOBALS[$class]->process();
                         for ($i=0, $n=sizeof($GLOBALS[$class]->output); $i<$n; $i++) {
 
 
                             if (zen_not_null($GLOBALS[$class]->output[$i]['title']) && zen_not_null($GLOBALS[$class]->output[$i]['text'])) {
-                                $order_totals[] = array('code' => $GLOBALS[$class]->code,
+                                $order_totals[$GLOBALS[$class]->code] = array('code' => $GLOBALS[$class]->code,
                                     'title' => $GLOBALS[$class]->output[$i]['title'],
                                     'text' => $GLOBALS[$class]->output[$i]['text'],
                                     'value' => $GLOBALS[$class]->output[$i]['value'],
@@ -582,7 +597,7 @@ class billmate_invoice {
                         }
                         //$GLOBALS[$class]->{$class}();
 
-                    }
+                    }*/
                 }
             }
 
@@ -623,7 +638,7 @@ class billmate_invoice {
                 'cc_number' => $order->info['cc_number'],
                 'cc_expires' => $order->info['cc_expires'],
                 'date_purchased' => 'now()',
-                'orders_status' => 0,
+                'orders_status' => 1,
                 'currency' => $order->info['currency'],
                 'currency_value' => $order->info['currency_value']);
 
@@ -631,20 +646,21 @@ class billmate_invoice {
 
             $insert_id = $db->Insert_ID();;
 
-            for ($i=0, $n=sizeof($order_totals); $i<$n; $i++) {
+            /*foreach($order_totals as $key => $total)
+             {
                 $sql_data_array = array('orders_id' => $insert_id,
-                    'title' => $order_totals[$i]['title'],
-                    'text' => $order_totals[$i]['text'],
-                    'value' => $order_totals[$i]['value'],
-                    'class' => $order_totals[$i]['code'],
-                    'sort_order' => $order_totals[$i]['sort_order']);
+                    'title' => $total['title'],
+                    'text' => $total['text'],
+                    'value' => $total['value'],
+                    'class' => $total['code'],
+                    'sort_order' => $total['sort_order']);
 
                 zen_db_perform(TABLE_ORDERS_TOTAL, $sql_data_array);
-            }
+            }*/
 
             $customer_notification = (SEND_EMAILS == 'true') ? '1' : '0';
             $sql_data_array = array('orders_id' => $insert_id,
-                'orders_status_id' => 0,
+                'orders_status_id' => 1,
                 'date_added' => 'now()',
                 'customer_notified' => 0,
                 'comments' => $order->info['comments']);
@@ -749,7 +765,7 @@ class billmate_invoice {
             foreach ($order_totals as $ot_code => $value) {
                 $class = $value['code'];
                 
-
+                error_log('totals'.print_r($value,true));
 
                 $code = $GLOBALS[$class]->code;
                 $ignore=false;
@@ -799,8 +815,20 @@ class billmate_invoice {
             }
             $billmate_ot['code_entries'] = $j;
         }
-
+        error_log('ot'.print_r($order_totals,true));
         $_SESSION['billmate_ot'] = $billmate_ot;
+        $db->Execute('delete from ' . TABLE_ORDERS_TOTAL . ' where orders_id = "' . (int)$_SESSION['cart_billmate_card_ID']. '"');
+        foreach($order_totals as $key => $total)
+        {
+            $sql_data_array = array('orders_id' => $_SESSION['cart_billmate_card_ID'],
+                'title' => $total['title'],
+                'text' => $total['text'],
+                'value' => $total['value'],
+                'class' => $total['code'],
+                'sort_order' => $total['sort_order']);
+
+            zen_db_perform(TABLE_ORDERS_TOTAL, $sql_data_array);
+        }
 
         $process_button_string .= zen_draw_hidden_field(zen_session_name(),
                 zen_session_id());

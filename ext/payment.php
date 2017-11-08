@@ -417,14 +417,19 @@ function invoice($order_id){
                 $shippingTaxRate = $tax;
                 $totalValue += round($shippingPrice);
                 $taxValue += round(($shippingPrice * ($shippingTaxRate/100)));
+                error_log('totalValueAfterShipping'.$totalValue);
 
                 continue;
             }
             if( $code == 'ot_billmate_fee' ){
                 $handlingPrice = $price_without_tax;
                 $handlingTaxRate = $tax;
+                error_log('hp'.$handlingPrice);
+                error_log('hptax'.$handlingPrice * ($handlingTaxRate/100));
                 $taxValue += $handlingPrice * ($handlingTaxRate/100);
                 $totalValue += $handlingPrice;
+                error_log('totalValueAfterHandling'.$totalValue);
+
                 continue;
             }
 
@@ -542,6 +547,7 @@ function invoice($order_id){
 
 
 
+    error_log('totalValueBeforeTotal'.$totalValue);
     $totaltax = round($taxValue,0);
     //$totalValue += (100* $shippingPrice);
     $totalwithtax = round(getTotal($order_id)*100,0);
