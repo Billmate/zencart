@@ -249,7 +249,7 @@ function partpay($order_id){
 
 
     $totaltax = round($taxValue,0);
-    $totalwithtax = round(getTotal($order_id)*100,0);
+    $totalwithtax = round(getTotal($order_id)*100*$currencies->get_value($currency),0);
     //$totalwithtax += $shippingPrice * ($shippingTaxRate/100);
     $totalwithouttax = $totalValue;
     $rounding = $totalwithtax - ($totalwithouttax+$totaltax);
@@ -550,7 +550,7 @@ function invoice($order_id){
     error_log('totalValueBeforeTotal'.$totalValue);
     $totaltax = round($taxValue,0);
     //$totalValue += (100* $shippingPrice);
-    $totalwithtax = round(getTotal($order_id)*100,0);
+    $totalwithtax = round(getTotal($order_id)*100*$currencies->get_value($currency),0);
     //$totalwithtax += $shippingPrice * ($shippingTaxRate/100);
     $totalwithouttax = $totalValue;
     $rounding = $totalwithtax - ($totalwithouttax+$totaltax);
@@ -689,5 +689,5 @@ function getCountryIdFromName($name){
 function getTotal($id){
     global $db;
     $total = $db->Execute("select * from " . TABLE_ORDERS_TOTAL . " where class = 'ot_total'  AND orders_id = '" . $id . "'");
-    return $total->fields['value'];
+    return (float)$total->fields['value'];
 }

@@ -59,7 +59,7 @@ class ot_billmate_fee {
             $tax_rate =zen_get_tax_rate(MODULE_BILLMATE_FEE_TAX_CLASS);
 
             $this->output[] = array('title' => $this->title . ':',
-                    'text' => $currencies->format($od_amount),
+                    'text' => $currencies->format($od_amount, true, $order->info['currency'], $order->info['currency_value']),
                     'value' => $od_amount,
                     'tax_rate' => $tax_rate);
             $order->info['total'] = $order->info['total'] + $od_amount;
@@ -78,7 +78,7 @@ class ot_billmate_fee {
         if ($_SESSION['payment'] != "billmate_invoice")
             return $od_amount;
 
-		$od_amount = MODULE_BILLMATE_FEE_FIXED * $currencies->get_value($currency);
+		$od_amount = MODULE_BILLMATE_FEE_FIXED;
 
         if ($od_amount == 0)
             return $od_amount;
@@ -106,7 +106,7 @@ class ot_billmate_fee {
 
     function get_order_total() {
 		
-        global  $order, $cart, $currencies, $db;
+        global  $order, $cart, $currencies, $currency, $db;
         $order_total = $order->info['total'];
         $currency = $_SESSION['currency'];
 

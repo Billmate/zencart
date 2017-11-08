@@ -742,7 +742,7 @@ class billmatecardpay {
 		$totaltax = round($taxValue,0);
 
 		
-		$totalwithtax = round(str_replace(',','.',$order->info['total'])*100,0);
+		$totalwithtax = round((float)str_replace(',','.',$order->info['total'])*100*$currencies->get_value($currency),0);
 		//$totalwithtax += $shippingPrice * ($shippingTaxRate/100);
 		$totalwithouttax = $totalValue;
 		$rounding = $totalwithtax - ($totalwithouttax+$totaltax);

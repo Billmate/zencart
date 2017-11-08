@@ -262,16 +262,14 @@ class billmate_invoice {
         $er = $currencies->get_value($currency);
 
         // FIX THE LINK TO THE CONDITION
-        if(is_numeric(MODULE_BILLMATE_FEE_FIXED) && MODULE_BILLMATE_FEE_FIXED >= 0)
-            $billmate_fee = round($currencies->get_value($currency)*MODULE_BILLMATE_FEE_FIXED, 2);
-        else
+        if(!is_numeric(MODULE_BILLMATE_FEE_FIXED) || MODULE_BILLMATE_FEE_FIXED == 0)
             $billmate_fee = 0;
 
         if($billmate_fee > 0) {
             $tax_rate = zen_get_tax_rate(MODULE_BILLMATE_FEE_TAX_CLASS);
             /*$billmate_fee = $billmate_fee *( 1+($tax_rate/100));
             $billmate_fee = number_format($billmate_fee,2);*/
-            $billmate_fee = $currencies->format($billmate_fee);
+            $billmate_fee = $currencies->format($billmate_fee, true, $order->info['currency'], $order->info['currency_value']);
 
             $this->title .= sprintf(MODULE_PAYMENT_BILLMATE_EXTRA_FEE, $billmate_fee);
         }
