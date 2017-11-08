@@ -78,7 +78,7 @@ class ot_billmate_fee {
         if ($_SESSION['payment'] != "billmate_invoice")
             return $od_amount;
 
-		$od_amount = MODULE_BILLMATE_FEE_FIXED;
+		$od_amount = MODULE_BILLMATE_FEE_FIXED * $currencies->get_value($currency);
 
         if ($od_amount == 0)
             return $od_amount;
@@ -100,7 +100,7 @@ class ot_billmate_fee {
             $order->info['total'] += $tod_amount;
         }
 
-        return ($od_amount/$currencies->get_value($currency));
+        return $od_amount;
     }
 
 
