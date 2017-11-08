@@ -283,21 +283,7 @@ class billmatecardpay {
 											'text' => $shipping_text,
 											'value' => $shipping_value,
 											'sort_order' => $GLOBALS[$class]->sort_order);
-			  } else {
-				  $GLOBALS[$class]->process();
-				  for ($i=0, $n=sizeof($GLOBALS[$class]->output); $i<$n; $i++) {
-
-
-					  if (zen_not_null($GLOBALS[$class]->output[$i]['title']) && zen_not_null($GLOBALS[$class]->output[$i]['text'])) {
-						  $order_totals[] = array('code' => $GLOBALS[$class]->code,
-							  'title' => $GLOBALS[$class]->output[$i]['title'],
-							  'text' => $GLOBALS[$class]->output[$i]['text'],
-							  'value' => $GLOBALS[$class]->output[$i]['value'],
-							  'sort_order' => $GLOBALS[$class]->sort_order);
-					  }
-				  }
-				  //$GLOBALS[$class]->$class();
-			  }
+			  } 
             }
           }
 
@@ -506,6 +492,18 @@ class billmatecardpay {
             $billmatecardpay_ot['code_entries'] = $j;
         }
 		$_SESSION['billmatecardpay_ot'] = $billmatecardpay_ot;
+	    $db->Execute('delete from ' . TABLE_ORDERS_TOTAL . ' where orders_id = "' . (int)$_SESSION['cart_billmate_card_ID']. '"');
+	    foreach($order_totals as $key => $total)
+	    {
+		    $sql_data_array = array('orders_id' => $_SESSION['cart_billmate_card_ID'],
+			    'title' => $total['title'],
+			    'text' => $total['text'],
+			    'value' => $total['value'],
+			    'class' => $total['code'],
+			    'sort_order' => $total['sort_order']);
+
+		    zen_db_perform(TABLE_ORDERS_TOTAL, $sql_data_array);
+	    }
 		$return = $this->doInvoice();
 		$redirect = $return->url;
 
