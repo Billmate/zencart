@@ -332,7 +332,7 @@ class billmatecardpay {
 
           $insert_id = $db->Insert_ID();
 
-          for ($i=0, $n=sizeof($order_totals); $i<$n; $i++) {
+          /*for ($i=0, $n=sizeof($order_totals); $i<$n; $i++) {
             $sql_data_array = array('orders_id' => $insert_id,
                                     'title' => $order_totals[$i]['title'],
                                     'text' => $order_totals[$i]['text'],
@@ -341,7 +341,7 @@ class billmatecardpay {
                                     'sort_order' => $order_totals[$i]['sort_order']);
 
             zen_db_perform(TABLE_ORDERS_TOTAL, $sql_data_array);
-          }
+          }*/
 
 		  $customer_notification = (SEND_EMAILS == 'true') ? '1' : '0';
 		  $sql_data_array = array('orders_id' => $insert_id, 

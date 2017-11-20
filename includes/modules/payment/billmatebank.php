@@ -363,9 +363,9 @@ class billmatebank {
             }
           }
 
-          $cart_billmate_card_ID = $insert_id;
+			$_SESSION['cart_billmate_card_ID'] = $cart_billmate_card_ID = $insert_id;
 
-	          unset($_SESSION['cart_billmate_card_ID']);
+	          //unset($_SESSION['cart_billmate_card_ID']);
         }
         return array('title' => MODULE_PAYMENT_BILLMATEBANK_TEXT_CONFIRM_DESCRIPTION);
     }
