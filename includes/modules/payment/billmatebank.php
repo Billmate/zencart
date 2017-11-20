@@ -137,11 +137,11 @@ class billmatebank {
 
     function selection() {
 
-        global $order, $customer_id, $currencies, $currency, $user_billing, $cart_billmate_bank_ID,$order_id,$insert_id,$languages_id,$db;
+        global $order, $customer_id, $currencies, $currency, $user_billing, $cart_billmate_card_ID,$order_id,$insert_id,$languages_id,$db;
 	    $languages_id = $_SESSION['languages_id'];
 
-        if (isset($_SESSION['cart_billmate_bank_ID'])) {
-			$order_id = $insert_id = $_SESSION['cart_billmate_bank_ID'];
+        if (isset($_SESSION['cart_billmate_card_ID'])) {
+			$order_id = $insert_id = $_SESSION['cart_billmate_card_ID'];
 
 			$check_query = $db->Execute('select orders_id from ' . TABLE_ORDERS_STATUS_HISTORY . ' where orders_id = "' . (int)$order_id . '" limit 1');
 
@@ -153,7 +153,7 @@ class billmatebank {
 			  $db->Execute('delete from ' . TABLE_ORDERS_PRODUCTS_ATTRIBUTES . ' where orders_id = "' . (int)$order_id . '"');
 			  $db->Execute('delete from ' . TABLE_ORDERS_PRODUCTS_DOWNLOAD . ' where orders_id = "' . (int)$order_id . '"');
 
-				unset($_SESSION['cart_billmate_bank_ID']);
+				unset($_SESSION['cart_billmate_card_ID']);
 			}
 		}
 
@@ -196,7 +196,7 @@ class billmatebank {
     }
 
     function confirmation() {
-		global $cartID,$cart, $cart_billmate_bank_ID, $customer_id, $order, $order_total_modules,$currencies,$db;
+		global $cartID,$cart, $cart_billmate_card_ID, $customer_id, $order, $order_total_modules,$currencies,$db;
 	    $languages_id = $_SESSION['languages_id'];
         if (isset($_SESSION['cart_billmate_card_ID'])) {
           $order_id = $_SESSION['cart_billmate_card_ID'];
@@ -363,15 +363,15 @@ class billmatebank {
             }
           }
 
-          $cart_billmate_bank_ID = $insert_id;
+          $cart_billmate_card_ID = $insert_id;
 
-	          unset($_SESSION['cart_billmate_bank_ID']);
+	          unset($_SESSION['cart_billmate_card_ID']);
         }
         return array('title' => MODULE_PAYMENT_BILLMATEBANK_TEXT_CONFIRM_DESCRIPTION);
     }
 
     function process_button() {
-        global $order, $cart,$order_total_modules, $billmatebank_ot, $shipping,  $language_id, $language, $currency,$cart_billmate_bank_ID,$db, $order_totals;
+        global $order, $cart,$order_total_modules, $billmatebank_ot, $shipping,  $language_id, $language, $currency,$cart_billmate_card_ID,$db, $order_totals;
 	    $languages_id = $_SESSION['languages_id'];
 	    $shipping = $_SESSION['shipping'];
 
@@ -453,10 +453,10 @@ class billmatebank {
 
         
 	    $_SESSION['billmatebank_ot'] = $billmatebank_ot;
-	    $db->Execute('delete from ' . TABLE_ORDERS_TOTAL . ' where orders_id = "' . (int)$_SESSION['cart_billmate_bank_ID']. '"');
+	    $db->Execute('delete from ' . TABLE_ORDERS_TOTAL . ' where orders_id = "' . (int)$_SESSION['cart_billmate_card_ID']. '"');
 	    foreach($order_totals as $key => $total)
 	    {
-		    $sql_data_array = array('orders_id' => $_SESSION['cart_billmate_bank_ID'],
+		    $sql_data_array = array('orders_id' => $_SESSION['cart_billmate_card_ID'],
 			    'title' => $total['title'],
 			    'text' => $total['text'],
 			    'value' => $total['value'],
@@ -489,7 +489,7 @@ class billmatebank {
 	function doInvoice(){
 	
 		 global $order, $customer_id, $currency, $currencies, $sendto, $billto,
-				   $billmatebank_ot, $billmatebank_livemode, $billmatebank_testmode,$insert_id,$cart_billmate_bank_ID,$db;
+				   $billmatebank_ot, $billmatebank_livemode, $billmatebank_testmode,$insert_id,$cart_billmate_card_ID,$db;
 		$languages_id = $_SESSION['languages_id'];
 		$billmatebank_ot = $_SESSION['billmatebank_ot'];
 		$currency = $_SESSION['currency'];
@@ -666,7 +666,7 @@ class billmatebank {
 												"language" => $lang,
 												"country" => "SE",
 												"autoactivate" => (MODULE_PAYMENT_BILLMATEBANK_AUTHENTICATION_MODE == 'sale')?1:0,
-												"orderid" => (string)$cart_billmate_bank_ID,
+												"orderid" => (string)$cart_billmate_card_ID,
 											);
 		$invoiceValues['PaymentInfo'] = array( 	"paymentdate" => date('Y-m-d'),
 											"paymentterms" => "14",
@@ -727,11 +727,11 @@ class billmatebank {
 	
     function before_process() {
 		global $order, $customer_id, $currency, $currencies, $sendto, $billto,$already_completed,
-               $billmatebank_ot, $billmatebank_livemode, $billmatebank_testmode,$insert_id, $cart_billmate_bank_ID,$payment,$cartID, $cart,$db;
+               $billmatebank_ot, $billmatebank_livemode, $billmatebank_testmode,$insert_id, $cart_billmate_card_ID,$payment,$cartID, $cart,$db;
 	    $languages_id = $_SESSION['languages_id'];
 	
 		require(DIR_FS_CATALOG . DIR_WS_CLASSES . 'billmate/billmateutils.php');
-		$order_id =$cart_billmate_bank_ID;
+		$order_id =$cart_billmate_card_ID;
 		
 		//get response data
 		$_DATA = json_decode($_REQUEST['data'], true);
@@ -950,7 +950,7 @@ class billmatebank {
 			unset($_SESSION['payment']);
 			unset($_SESSION['comments']);
 
-			unset($_SESSION['cart_billmate_bank_ID']);
+			unset($_SESSION['cart_billmate_card_ID']);
             $this->after_process();
             $_SESSION['cart']->reset(true);
 	        zen_redirect(zen_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL'));
