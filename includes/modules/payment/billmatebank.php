@@ -692,7 +692,7 @@ class billmatebank {
 		$invoiceValues['Articles'] = $goodsList;
 
 		$totaltax = round($taxValue,0);
-		$totalwithtax = round((float)str_replace(',','.',$order->info['total'])*$currencies->getValue($currency)*100,0);
+		$totalwithtax = round((float)str_replace(',','.',$order->info['total'])*$currencies->get_value($currency)*100,0);
 
 		$totalwithouttax = $totalValue;
 		$rounding = $totalwithtax - ($totalwithouttax+$totaltax);
