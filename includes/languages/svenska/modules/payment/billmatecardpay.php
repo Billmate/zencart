@@ -67,3 +67,4 @@
 define('MODULE_PAYMENT_BILLMATECARDPAY_CANCEL', 'Kortköpet avbröts innan det fullföljdes. Var vänlig prova igen eller välj ett annat betalalternativ.');
 define('MODULE_PAYMENT_BILLMATECARDPAY_FAILED', 'Dessvärre gick det inte att genomföra kortköpet med de uppgifter ni tillhandahållit. Var vänlig försök igen eller välj ett annat betalsätt.');
 
+

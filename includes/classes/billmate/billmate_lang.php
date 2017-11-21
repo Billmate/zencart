@@ -37,13 +37,14 @@
 
 // SWEDISH PREDEFINED VARIABLES
 define('BILLMATE_LANG_SE_IMGINVOICE',
-        '<img src="'.HTTP_SERVER.DIR_WS_CATALOG.'images/billmate/bm_faktura_l.png" />');
+        '<img src="'.HTTP_SERVER.'/images/billmate/bm_faktura_l.png" />');
 define('BILLMATE_LANG_SE_IMGCARDPAY',
-        '<img src="'.HTTP_SERVER.DIR_WS_CATALOG.'images/billmate/bm_kort_l.png" />');
+        '<img src="'.HTTP_SERVER.'/images/billmate/bm_kort_l.png" />');
 define('BILLMATE_LANG_SE_IMGBANK',
-        '<img src="'.HTTP_SERVER.DIR_WS_CATALOG.'images/billmate/billmate_bank_s.png" />');
+        '<img src="'.HTTP_SERVER.'/images/billmate/billmate_bank_s.png" />');
 define('BILLMATE_LANG_SE_IMGCONSUMERCREDIT',
-        '<img src="'.HTTP_SERVER.DIR_WS_CATALOG.'images/billmate/bm_delbetalning_l.png" />');
+        '<img src="'.HTTP_SERVER.'/images/billmate/bm_delbetalning_l.png" />');
+		
 define('BILLMATE_LANG_ADDRESS_WRONG', 'Your Billing address is wrong.');
 define('BILLMATE_LANG_CORRECT_ADDRESS', 'Correct Address is :');
 define('BILLMATE_LANG_CORRECT_ADDRESS_OPTION', 'Click Yes to continue with new address, No to choose other payment method');

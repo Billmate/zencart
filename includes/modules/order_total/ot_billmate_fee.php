@@ -59,7 +59,7 @@ class ot_billmate_fee {
             $tax_rate =zen_get_tax_rate(MODULE_BILLMATE_FEE_TAX_CLASS);
 
             $this->output[] = array('title' => $this->title . ':',
-                    'text' => $currencies->format($od_amount),
+                    'text' => $currencies->format($od_amount, true, $order->info['currency'], $order->info['currency_value']),
                     'value' => $od_amount,
                     'tax_rate' => $tax_rate);
             $order->info['total'] = $order->info['total'] + $od_amount;
@@ -69,7 +69,8 @@ class ot_billmate_fee {
 
     function calculate_credit($amount) {
         global $order, $customer_id, $payment, $sendto, $customer_id,
-        $customer_zone_id, $customer_country_id, $cart, $currencies, $currency;
+        $customer_zone_id, $customer_country_id, $cart, $currencies;
+        $currency = $_SESSION['currency'];
 
         $od_amount=0;
 	
@@ -99,7 +100,7 @@ class ot_billmate_fee {
             $order->info['total'] += $tod_amount;
         }
 
-        return ($od_amount/$currencies->get_value($currency));
+        return $od_amount;
     }
 
 
@@ -107,6 +108,7 @@ class ot_billmate_fee {
 		
         global  $order, $cart, $currencies, $currency, $db;
         $order_total = $order->info['total'];
+        $currency = $_SESSION['currency'];
 
 // Check if gift voucher is in cart and adjust total
         $products = $order->products;
@@ -152,7 +154,7 @@ class ot_billmate_fee {
 
         if (!isset($this->check)) {
             $check_query = $db->Execute("select configuration_value from " . TABLE_CONFIGURATION . " where configuration_key = 'MODULE_BILLMATE_FEE_STATUS'");
-            $this->check = $check_query->RecordCount();
+            $this->check = $check_query->RecordCount() > 0 ? true : false;
         }
         return $this->check;
     }

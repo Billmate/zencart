@@ -16,6 +16,14 @@ if(!function_exists('getCountryID')){
 		}
 	}
 }
+function convertToUTF8($str) {
+	$enc = mb_detect_encoding($str);
+	if ($enc && $enc != 'UTF-8') {
+		return iconv($enc, 'UTF-8', $str);
+	} else {
+		return $str;
+	}
+}
 
 function match_usernamevp( $str1, $str2 ){
     $name1 = explode(' ', utf8_strtolower( Encoding::fixUTF8( $str1 ) ) );
