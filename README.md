@@ -4,6 +4,10 @@ By Billmate AB - http://billmate.se/
 
 Documentation with instructions on how to setup the plugin can be found at https://billmate.se/plugins/zencart/Instruktionsmanual_Zencart_Billmate_Plugin.pdf
 
+## NO LONGER UPDATED / SUPPORTED
+
+Billmate no longer updates or offers support for this payment module.
+
 
 ### DESCRIPTION
 
